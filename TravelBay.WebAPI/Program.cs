@@ -18,6 +18,16 @@ using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using System.Text;
 
+// In Docker the env vars come from docker-compose's env_file (no .env file inside the image),
+// so a missing .env file here (e.g. when running from the published container) is expected.
+try
+{
+    DotNetEnv.Env.TraversePath().Load();
+}
+catch (FileNotFoundException)
+{
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -30,7 +40,12 @@ builder.Services.AddControllers(
 );
 
 // Add Entity Framework Core DbContext
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// Connection string is composed from .env, never hardcoded/committed (DB_HOST differs between host and docker network).
+var dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
+var dbPort = Environment.GetEnvironmentVariable("DB_PORT") ?? "1433";
+var dbName = Environment.GetEnvironmentVariable("DB_NAME");
+var dbPassword = Environment.GetEnvironmentVariable("DB_SA_PASSWORD");
+var connectionString = $"Server={dbHost},{dbPort};Database={dbName};User Id=sa;Password={dbPassword};TrustServerCertificate=True;";
 builder.Services.AddDbContext<TravelBayDbContext>(options =>
     options.UseSqlServer(connectionString)
 );

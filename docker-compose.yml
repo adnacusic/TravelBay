@@ -1,18 +1,70 @@
-version: '3.8'
-
 services:
-  ecomm-fit-2026:
+  sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: ecomm-fit-2026
+    container_name: travelbay-sqlserver
     environment:
-      ACCEPT_EULA: Y
-      SA_PASSWORD: qweasd123!
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: ${DB_SA_PASSWORD}
     ports:
-      - "1435:1433"
-    expose:
-      - "1433"
+      - "${DB_PORT}:1433"
     volumes:
-      - sqlserver_data:/var/opt/mssql
+      - travelbay_sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: travelbay-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    ports:
+      - "${RABBITMQ_PORT}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT}:15672"
+    volumes:
+      - travelbay_rabbitmq_data:/var/lib/rabbitmq
+
+  api:
+    build:
+      context: .
+      dockerfile: TravelBay.WebAPI/Dockerfile
+    container_name: travelbay-api
+    env_file:
+      - .env
+    environment:
+      # Overrides .env's host-machine defaults with the in-network service name/port.
+      DB_HOST: sqlserver
+      DB_PORT: 1433
+    ports:
+      - "${API_HTTP_PORT}:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+
+  # worker:
+  #   Python AI agent worker (RabbitMQ consumer, Groq + Google Custom Search) — dodaje se u kasnijoj fazi.
+  #   build:
+  #     context: ./worker
+  #     dockerfile: Dockerfile
+  #   container_name: travelbay-worker
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     DB_HOST: sqlserver
+  #     DB_PORT: 1433
+  #     RABBITMQ_HOST: rabbitmq
+  #   depends_on:
+  #     sqlserver:
+  #       condition: service_healthy
+  #     rabbitmq:
+  #       condition: service_started
 
 volumes:
-  sqlserver_data:
+  travelbay_sqlserver_data:
+  travelbay_rabbitmq_data:

@@ -1,0 +1,14 @@
+**/bin/
+**/obj/
+**/.vs/
+.git/
+.gitignore
+.dockerignore
+.env
+.env.example
+UI/
+docs/
+_odbrana/
+*.zip
+CLAUDE.md
+README.md

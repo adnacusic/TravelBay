@@ -1,0 +1,56 @@
+## .NET / Visual Studio build outputs
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+.vs/
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.pdb
+*.cache
+publish/
+artifacts/
+
+## EF Core / SQL Server local files
+*.mdf
+*.ldf
+*.ndf
+
+## Environment / secrets
+.env
+*.env
+!.env.example
+
+## Flutter/Dart build outputs (nested .gitignore files also cover this per-app)
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.pub/
+
+## Docker
+docker-compose.override.yml
+
+## OS junk
+.DS_Store
+Thumbs.db
+
+## Local-only project files (never commit)
+CLAUDE.md
+_odbrana/
+rsII_exam_template_2025_26-main.zip

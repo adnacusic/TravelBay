@@ -5,26 +5,22 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TravelBay.Services.Database
 {
-    public class Cart
+    public class Collection
     {
         [Key]
         public int Id { get; set; }
-        
-        // User who owns this cart
+
         public int UserId { get; set; }
-        
+
         [ForeignKey("UserId")]
         public User User { get; set; } = null!;
-        
-        // Session ID for guest users (optional)
-        [MaxLength(100)]
-        public string? SessionId { get; set; }
-        
+
+        [Required]
+        [MaxLength(200)]
+        public string Name { get; set; } = string.Empty;
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        
-        public DateTime? UpdatedAt { get; set; }
-        
-        // Navigation property for cart items
-        public ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
+
+        public ICollection<CollectionItem> Items { get; set; } = new List<CollectionItem>();
     }
-} 
+}

@@ -117,6 +117,9 @@ builder.Services.AddScoped<IViewHistoryService, ViewHistoryService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IRecommendationService, RecommendationService>();
+
 builder.Services.AddScoped<IValidator<DestinationInsertRequest>, DestinationInsertValidator>();
 builder.Services.AddScoped<IValidator<DestinationUpdateRequest>, DestinationUpdateValidator>();
 builder.Services.AddScoped<IValidator<CategoriesInsertRequest>, CategoryInsertValidator>();

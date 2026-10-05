@@ -100,21 +100,27 @@ public class RecommendationService : IRecommendationService
     private async Task<List<CandidateRow>> LoadCandidatesAsync(int userId)
     {
         // One SQL query: aggregates are correlated sub-selects, saved destinations are a NOT EXISTS.
-        return await _dbContext.Destinations
+        var rows = await _dbContext.Destinations
             .AsNoTracking()
             .Where(d => d.Category.IsActive
                         && !_dbContext.SavedDestinations.Any(sd => sd.UserId == userId && sd.DestinationId == d.Id))
-            .Select(d => new CandidateRow(
+            .Select(d => new
+            {
                 d.Id,
                 d.CategoryId,
-                d.Category.Name,
-                d.Reviews.Count(r => r.Status == ReviewStatus.Approved),
-                d.Reviews.Where(r => r.Status == ReviewStatus.Approved).Sum(r => (int?)r.Rating) ?? 0,
-                d.ViewHistoryEntries.Select(v => v.UserId).Distinct().Count()))
+                CategoryName = d.Category.Name,
+                ApprovedReviewCount = d.Reviews.Count(r => r.Status == ReviewStatus.Approved),
+                ApprovedRatingSum = d.Reviews.Where(r => r.Status == ReviewStatus.Approved).Sum(r => (int?)r.Rating) ?? 0,
+                UniqueVisitors = d.ViewHistoryEntries.Select(v => v.UserId).Distinct().Count()
+            })
             .OrderByDescending(c => c.UniqueVisitors + c.ApprovedReviewCount)
             .ThenBy(c => c.Id)
             .Take(RecommenderSettings.MaxCandidates)
             .ToListAsync();
+
+        return rows
+            .Select(r => new CandidateRow(r.Id, r.CategoryId, r.CategoryName, r.ApprovedReviewCount, r.ApprovedRatingSum, r.UniqueVisitors))
+            .ToList();
     }
 
     private async Task<List<RecommendationResponse>> BuildResponsesAsync(List<ScoredCandidate> pageItems)

@@ -52,6 +52,11 @@ namespace TravelBay.Services
                 //TODO: parametrize sortBy to prevent SQL injection
                 query = query.OrderBy(search.SortBy);
             }
+            else
+            {
+                // Skip/Take without an ordering gives no stable page order; every entity has an Id key.
+                query = query.OrderBy("Id");
+            }
 
             if (search.Page.HasValue)
             {

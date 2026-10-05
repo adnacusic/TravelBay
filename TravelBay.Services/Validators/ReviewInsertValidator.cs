@@ -1,0 +1,14 @@
+using TravelBay.Model.Requests;
+using FluentValidation;
+
+namespace TravelBay.Services.Validators;
+
+public class ReviewInsertValidator : AbstractValidator<ReviewInsertRequest>
+{
+    public ReviewInsertValidator()
+    {
+        RuleFor(x => x.DestinationId).GreaterThan(0);
+        RuleFor(x => x.Rating).InclusiveBetween(1, 5);
+        RuleFor(x => x.Comment).MaximumLength(1000);
+    }
+}

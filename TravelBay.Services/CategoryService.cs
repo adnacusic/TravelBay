@@ -26,11 +26,6 @@ namespace TravelBay.Services
                 {
                     query = query.Where(c => c.Name.Contains(search.Name, StringComparison.OrdinalIgnoreCase));
                 }
-
-                if (search.ParentCategoryId.HasValue)
-                {
-                    query = query.Where(c => c.ParentCategoryId == search.ParentCategoryId.Value);
-                }
             }
 
             return query;

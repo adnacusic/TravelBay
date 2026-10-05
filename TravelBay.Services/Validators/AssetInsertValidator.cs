@@ -1,10 +1,5 @@
-﻿using TravelBay.Model.Requests;
+using TravelBay.Model.Requests;
 using FluentValidation;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TravelBay.Services.Validators
 {
@@ -22,9 +17,6 @@ namespace TravelBay.Services.Validators
 
             RuleFor(x => x.Base64Content)
                 .NotEmpty().WithMessage("Base64Content is required.");
-
-            RuleFor(x => x.ProductId)
-                .GreaterThan(0).WithMessage("ProductId is required and must be greater than 0.");
         }
     }
 }

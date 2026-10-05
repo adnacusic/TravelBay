@@ -3,7 +3,6 @@ using TravelBay.Model.Requests;
 using TravelBay.Model.Responses;
 using TravelBay.Services;
 using TravelBay.Services.Database;
-using TravelBay.Services.ProductStateMachine;
 using TravelBay.Services.Validators;
 using TravelBay.WebAPI.Filters;
 using TravelBay.WebAPI.Services;
@@ -56,34 +55,20 @@ builder.Services.AddMapster();
 // configure a few mappings explicitly if needed (optional)
 // Mapster will automatically map same-named properties, but configuration
 // ensures any custom rules or future needs can be added here.
-TypeAdapterConfig<Product, ProductResponse>.NewConfig().IgnoreNullValues(true);
+TypeAdapterConfig<Destination, DestinationResponse>.NewConfig().IgnoreNullValues(true);
 TypeAdapterConfig<Category, CategoryResponse>.NewConfig().IgnoreNullValues(true);
 TypeAdapterConfig<User, UserResponse>.NewConfig().IgnoreNullValues(true);
 TypeAdapterConfig<UserUpdateRequest, User>.NewConfig().IgnoreNullValues(true);
-TypeAdapterConfig<ProductType, ProductTypeResponse>.NewConfig().IgnoreNullValues(true);
-TypeAdapterConfig<UnitOfMeasure, UnitOfMeasureResponse>.NewConfig().IgnoreNullValues(true);
 TypeAdapterConfig<Asset, AssetResponse>.NewConfig().IgnoreNullValues(true);
-TypeAdapterConfig<ProductReview, ProductReviewResponse>.NewConfig()
+TypeAdapterConfig<Review, ReviewResponse>.NewConfig()
     .Map(dest => dest.ReviewerDisplayName, src => $"{src.User.FirstName} {src.User.LastName}".Trim());
-TypeAdapterConfig<Order, OrderResponse>.NewConfig()
-    .Map(dest => dest.Status, src => (int)src.Status);
-TypeAdapterConfig<OrderItem, OrderItemResponse>.NewConfig()
-    .Map(dest => dest.ProductName, src => src.Product != null ? src.Product.Name : string.Empty);
 
 
 // register application services
-builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddScoped<BaseProductState>();
-builder.Services.AddScoped<InitialProductState>();
-builder.Services.AddScoped<DraftProductState>();
-builder.Services.AddScoped<ActiveProductState>();
+builder.Services.AddScoped<IDestinationService, DestinationService>();
 
 // category service
 builder.Services.AddScoped<ICategoryService, CategoryService>();
-// product type service
-builder.Services.AddScoped<IProductTypeService, ProductTypeService>();
-// unit of measure service
-builder.Services.AddScoped<IUnitOfMeasureService, UnitOfMeasureService>();
 // user service
 builder.Services.AddScoped<IUserService, UserService>();
 
@@ -96,21 +81,18 @@ builder.Services.AddScoped<IAccessManager, AccessManager>();
 
 builder.Services.AddScoped<ICryptoService, CryptoService>();
 
-builder.Services.AddScoped<IOrderService, OrderService>();
-builder.Services.AddScoped<IProductReviewService, ProductReviewService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
 
-builder.Services.AddScoped<IValidator<ProductTypeInsertRequest>, ProductTypeInsertValidator>();
-builder.Services.AddScoped<IValidator<ProductTypeUpdateRequest>, ProductTypeUpdateValidator>();
-builder.Services.AddScoped<IValidator<UnitOfMeasureInsertRequest>, UnitOfMeasureInsertValidator>();
-builder.Services.AddScoped<IValidator<UnitOfMeasureUpdateRequest>, UnitOfMeasureUpdateValidator>();
+builder.Services.AddScoped<IValidator<DestinationInsertRequest>, DestinationInsertValidator>();
+builder.Services.AddScoped<IValidator<DestinationUpdateRequest>, DestinationUpdateValidator>();
 builder.Services.AddScoped<IValidator<CategoriesInsertRequest>, CategoryInsertValidator>();
 builder.Services.AddScoped<IValidator<CategoriesUpdateRequest>, CategoryUpdateValidator>();
 builder.Services.AddScoped<IValidator<UserInsertRequest>, UserInsertValidator>();
 builder.Services.AddScoped<IValidator<UserUpdateRequest>, UserUpdateValidator>();
 builder.Services.AddScoped<IValidator<AssetInsertRequest>, AssetInsertValidator>();
 builder.Services.AddScoped<IValidator<AssetUpdateRequest>, AssetUpdateValidator>();
-builder.Services.AddScoped<IValidator<ProductReviewInsertRequest>, ProductReviewInsertValidator>();
-builder.Services.AddScoped<IValidator<ProductReviewUpdateRequest>, ProductReviewUpdateValidator>();
+builder.Services.AddScoped<IValidator<ReviewInsertRequest>, ReviewInsertValidator>();
+builder.Services.AddScoped<IValidator<ReviewUpdateRequest>, ReviewUpdateValidator>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -145,7 +127,7 @@ builder.Services.AddSwaggerGen(
         {
             Version = "v1",
             Title = "TravelBay API",
-            Description = "API for managing products and categories in the TravelBay application"
+            Description = "API for managing travel destinations, reviews and trip planning in the TravelBay application"
         });
 
         var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";

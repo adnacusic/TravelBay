@@ -5,6 +5,7 @@ using FluentValidation;
 using FluentValidation.Results;
 using Mapster;
 using MapsterMapper;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -131,7 +132,20 @@ namespace TravelBay.Services
                 throw new NotFoundException($"{typeof(TEntity).Name} with id {id} not found.");
 
             this._dbContext.Set<TEntity>().Remove(entity);
-            await this._dbContext.SaveChangesAsync();
+
+            try
+            {
+                await this._dbContext.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (IsForeignKeyViolation(ex))
+            {
+                throw new ClientException(
+                    $"{typeof(TEntity).Name} cannot be deleted because other records still reference it.");
+            }
         }
+
+        /// <summary>SQL Server error 547 is a FK/CHECK constraint violation.</summary>
+        private static bool IsForeignKeyViolation(DbUpdateException ex) =>
+            ex.InnerException is Microsoft.Data.SqlClient.SqlException sqlEx && sqlEx.Number == 547;
     }
 }

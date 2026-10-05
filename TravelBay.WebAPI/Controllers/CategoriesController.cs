@@ -1,3 +1,4 @@
+using TravelBay.Model.Constants;
 using TravelBay.Model.Requests;
 using TravelBay.Model.Responses;
 using TravelBay.Model.SearchObjects;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace TravelBay.WebAPI.Controllers;
 
+[Authorize(Roles = RoleNames.Admin)]
 public class CategoriesController : BaseCRUDController<CategoryResponse, CategorySearchObject, CategoriesInsertRequest, CategoriesUpdateRequest, ICategoryService>
 {
     public CategoriesController(ICategoryService categoryService) : base(categoryService)
@@ -17,5 +19,11 @@ public class CategoriesController : BaseCRUDController<CategoryResponse, Categor
     public override Task<PageResult<CategoryResponse>> GetAll([FromQuery] CategorySearchObject? search)
     {
         return base.GetAll(search);
+    }
+
+    [AllowAnonymous]
+    public override Task<ActionResult<CategoryResponse>> GetById(int id)
+    {
+        return base.GetById(id);
     }
 }

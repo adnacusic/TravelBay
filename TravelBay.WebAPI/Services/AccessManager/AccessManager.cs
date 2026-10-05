@@ -15,6 +15,8 @@ namespace TravelBay.WebAPI.Services.AccessManager
 {
     public class AccessManager : IAccessManager
     {
+        private const string InvalidCredentialsMessage = "Invalid username or password.";
+
         private readonly IUserService _userService;
         private readonly IConfiguration _configuration;
         private readonly ICryptoService _cryptoService;
@@ -32,16 +34,15 @@ namespace TravelBay.WebAPI.Services.AccessManager
         {
             var user = await _userService.GetByUsernameAsync(request.Username);
 
-
-            if (user == null)
+            // Same message for an unknown username and a wrong password, so login never reveals which usernames exist.
+            if (user == null || !_cryptoService.Verify(user.PasswordHash, user.PasswordSalt, request.Password))
             {
-                throw new Exception($"User with {request.Username} doesn't exist");
+                throw new ClientException(InvalidCredentialsMessage);
             }
 
-            var validPassword = _cryptoService.Verify(user.PasswordHash, user.PasswordSalt, request.Password);
-            if (!validPassword)
+            if (!user.IsActive)
             {
-                throw new Exception("Wrong credential");
+                throw new ClientException("User account is deactivated.");
             }
 
             var accessToken = GenerateToken(user);

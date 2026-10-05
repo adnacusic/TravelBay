@@ -158,7 +158,11 @@ builder.Services.AddAuthentication(options => // dodavanje authentfikacije i aut
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.Zero,
+        // AccessManager issues the role claim as ClaimNames.Role ("Role"), not the default
+        // ClaimTypes.Role URI - without this, User.IsInRole/[Authorize(Roles=...)] never match.
+        RoleClaimType = TravelBay.Model.Constants.ClaimNames.Role,
+        NameClaimType = TravelBay.Model.Constants.ClaimNames.Id
     };
 
     // SignalR's browser/WebSocket client can't set an Authorization header, so it sends the

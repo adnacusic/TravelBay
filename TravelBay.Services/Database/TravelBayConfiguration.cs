@@ -63,6 +63,12 @@ namespace TravelBay.Services.Database
                 .HasForeignKey(di => di.DestinationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<DestinationImage>()
+                .HasOne(di => di.Asset)
+                .WithMany()
+                .HasForeignKey(di => di.AssetId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // ----- Review -----
             modelBuilder.Entity<Review>()
                 .HasOne(r => r.Destination)

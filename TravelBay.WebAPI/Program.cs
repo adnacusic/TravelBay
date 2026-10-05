@@ -73,7 +73,10 @@ builder.Services.AddMapster();
 // configure a few mappings explicitly if needed (optional)
 // Mapster will automatically map same-named properties, but configuration
 // ensures any custom rules or future needs can be added here.
-TypeAdapterConfig<Destination, DestinationResponse>.NewConfig().IgnoreNullValues(true);
+TypeAdapterConfig<Destination, DestinationResponse>.NewConfig()
+    .IgnoreNullValues(true)
+    .Map(dest => dest.CityName, src => src.City != null ? src.City.Name : string.Empty)
+    .Map(dest => dest.Images, src => src.Images.OrderBy(i => i.OrderIndex));
 TypeAdapterConfig<Category, CategoryResponse>.NewConfig().IgnoreNullValues(true);
 TypeAdapterConfig<User, UserResponse>.NewConfig().IgnoreNullValues(true);
 TypeAdapterConfig<UserUpdateRequest, User>.NewConfig().IgnoreNullValues(true);
@@ -86,6 +89,7 @@ TypeAdapterConfig<City, CityResponse>.NewConfig()
 
 // register application services
 builder.Services.AddScoped<IDestinationService, DestinationService>();
+builder.Services.AddScoped<IDestinationImageService, DestinationImageService>();
 
 // category / reference data services
 builder.Services.AddScoped<ICategoryService, CategoryService>();
@@ -123,6 +127,7 @@ builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 
 builder.Services.AddScoped<IValidator<DestinationInsertRequest>, DestinationInsertValidator>();
 builder.Services.AddScoped<IValidator<DestinationUpdateRequest>, DestinationUpdateValidator>();
+builder.Services.AddScoped<IValidator<DestinationImageInsertRequest>, DestinationImageInsertValidator>();
 builder.Services.AddScoped<IValidator<CategoriesInsertRequest>, CategoryInsertValidator>();
 builder.Services.AddScoped<IValidator<CategoriesUpdateRequest>, CategoryUpdateValidator>();
 builder.Services.AddScoped<IValidator<CountryInsertRequest>, CountryInsertValidator>();

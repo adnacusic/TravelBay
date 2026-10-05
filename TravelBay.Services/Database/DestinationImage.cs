@@ -14,6 +14,7 @@ namespace TravelBay.Services.Database
         [ForeignKey("DestinationId")]
         public Destination Destination { get; set; } = null!;
 
+        /// <summary>Absolute URL for external images, or the API-relative content path for uploaded ones.</summary>
         [Required]
         [MaxLength(500)]
         public string ImageUrl { get; set; } = string.Empty;
@@ -24,6 +25,12 @@ namespace TravelBay.Services.Database
         public int OrderIndex { get; set; }
 
         public bool IsAiGenerated { get; set; }
+
+        /// <summary>Set only for images uploaded by an admin; the bytes live in the Asset blob store.</summary>
+        public int? AssetId { get; set; }
+
+        [ForeignKey("AssetId")]
+        public Asset? Asset { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }

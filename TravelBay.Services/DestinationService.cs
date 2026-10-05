@@ -27,6 +27,9 @@ public class DestinationService
 
     protected override Task<IQueryable<Destination>> IncludeRelatedEntitiesAsync(DestinationSearchObject? search, IQueryable<Destination> query = null!)
     {
+        // City name is part of every destination response (lists show it without a second lookup).
+        query = query.Include(d => d.City);
+
         if (search?.IncludeCategory == true)
         {
             query = query.Include(d => d.Category);
@@ -68,6 +71,7 @@ public class DestinationService
         var entity = await _dbContext.Destinations
             .AsNoTracking()
             .Include(d => d.Category)
+            .Include(d => d.City)
             .Include(d => d.Images)
             .Include(d => d.Reviews.Where(r => r.Status == ReviewStatus.Approved))
             .FirstOrDefaultAsync(d => d.Id == id);

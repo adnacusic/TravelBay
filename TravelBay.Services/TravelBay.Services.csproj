@@ -11,6 +11,11 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Needed for SignalR's Hub/IHubContext (NotificationHub lives here, not in WebAPI, so
+         NotificationService can push without Services depending on the WebAPI project). -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FluentValidation" Version="12.1.1" />

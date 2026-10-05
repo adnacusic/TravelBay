@@ -1,6 +1,6 @@
 using System.Security.Claims;
+using TravelBay.Model.Constants;
 using TravelBay.Services;
-using TravelBay.WebAPI.Services.AccessManager;
 using Microsoft.AspNetCore.Http;
 
 namespace TravelBay.WebAPI.Services;

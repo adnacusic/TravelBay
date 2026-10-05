@@ -1,4 +1,4 @@
-﻿using TravelBay.WebAPI.Services.AccessManager;
+﻿using TravelBay.Model.Constants;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 

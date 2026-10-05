@@ -1,5 +1,6 @@
 ﻿using TravelBay.Common.Services.CryptoService;
 using TravelBay.Model.Access;
+using TravelBay.Model.Constants;
 using TravelBay.Model.Exceptions;
 using TravelBay.Model.Responses;
 using TravelBay.Services;

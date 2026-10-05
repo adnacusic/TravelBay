@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TravelBay.Model.Enums;
+using TravelBay.Model.Exceptions;
 using TravelBay.Model.Requests;
 using TravelBay.Model.Responses;
 using TravelBay.Model.SearchObjects;
@@ -37,17 +38,17 @@ public class DestinationService
         return base.IncludeRelatedEntitiesAsync(search, query);
     }
 
-    protected override IEnumerable<Destination> ApplyFilters(IEnumerable<Destination> query, DestinationSearchObject? search)
+    protected override IQueryable<Destination> ApplyFilters(IQueryable<Destination> query, DestinationSearchObject? search)
     {
         if (search != null)
         {
             if (!string.IsNullOrWhiteSpace(search.Name))
             {
-                query = query.Where(d => d.Name.Contains(search.Name, StringComparison.OrdinalIgnoreCase));
+                query = query.Where(d => d.Name.Contains(search.Name));
             }
             if (!string.IsNullOrWhiteSpace(search.Description))
             {
-                query = query.Where(d => d.Description.Contains(search.Description, StringComparison.OrdinalIgnoreCase));
+                query = query.Where(d => d.Description.Contains(search.Description));
             }
             if (search.CategoryId.HasValue)
             {
@@ -73,7 +74,7 @@ public class DestinationService
 
         if (entity == null)
         {
-            throw new KeyNotFoundException($"Destination with id {id} not found.");
+            throw new NotFoundException($"Destination with id {id} not found.");
         }
 
         var response = _mapper.Map<DestinationResponse>(entity);
@@ -89,7 +90,7 @@ public class DestinationService
         var entity = await _dbContext.Destinations.FindAsync(id);
         if (entity == null)
         {
-            throw new KeyNotFoundException($"Destination with id {id} not found.");
+            throw new NotFoundException($"Destination with id {id} not found.");
         }
 
         entity.IsDeleted = true;

@@ -48,7 +48,7 @@ public class ReviewService
         return await Task.FromResult(query.Include(r => r.User));
     }
 
-    protected override IEnumerable<Review> ApplyFilters(IEnumerable<Review> query, ReviewSearchObject? search)
+    protected override IQueryable<Review> ApplyFilters(IQueryable<Review> query, ReviewSearchObject? search)
     {
         if (_userAccessor.IsInRole(RoleNames.Admin))
         {
@@ -135,7 +135,7 @@ public class ReviewService
         var entity = await _dbContext.Reviews.FindAsync(id);
         if (entity == null || entity.UserId != userId)
         {
-            throw new KeyNotFoundException($"{nameof(Review)} with id {id} not found.");
+            throw new NotFoundException($"{nameof(Review)} with id {id} not found.");
         }
 
         entity.Rating = request.Rating;
@@ -150,16 +150,20 @@ public class ReviewService
         return _mapper.Map<ReviewResponse>(loaded);
     }
 
-    /// <summary>Business entities use soft delete (status flip), never a hard SQL DELETE.</summary>
+    /// <summary>
+    /// Business entities use soft delete (status flip), never a hard SQL DELETE. Owners delete
+    /// their own review; Admins may also delete any review as part of moderation.
+    /// </summary>
     public override async Task DeleteAsync(int id)
     {
         var userId = _userAccessor.GetUserId()
                      ?? throw new InvalidOperationException("User id claim is missing.");
+        var isAdmin = _userAccessor.IsInRole(RoleNames.Admin);
 
         var entity = await _dbContext.Reviews.FindAsync(id);
-        if (entity == null || entity.UserId != userId)
+        if (entity == null || (!isAdmin && entity.UserId != userId))
         {
-            throw new KeyNotFoundException($"{nameof(Review)} with id {id} not found.");
+            throw new NotFoundException($"{nameof(Review)} with id {id} not found.");
         }
 
         entity.IsDeleted = true;

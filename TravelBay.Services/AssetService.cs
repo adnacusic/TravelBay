@@ -19,18 +19,18 @@ namespace TravelBay.Services
         {
         }
 
-        protected override IEnumerable<Asset> ApplyFilters(IEnumerable<Asset> query, AssetSearch? search)
+        protected override IQueryable<Asset> ApplyFilters(IQueryable<Asset> query, AssetSearch? search)
         {
             if (search != null)
             {
                 if (!string.IsNullOrWhiteSpace(search.FileName))
                 {
-                    query = query.Where(a => a.FileName.Contains(search.FileName, StringComparison.OrdinalIgnoreCase));
+                    query = query.Where(a => a.FileName.Contains(search.FileName));
                 }
 
                 if (!string.IsNullOrWhiteSpace(search.ContentType))
                 {
-                    query = query.Where(a => a.ContentType.Contains(search.ContentType, StringComparison.OrdinalIgnoreCase));
+                    query = query.Where(a => a.ContentType.Contains(search.ContentType));
                 }
             }
 

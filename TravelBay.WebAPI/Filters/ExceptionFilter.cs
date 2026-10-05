@@ -35,6 +35,18 @@ namespace TravelBay.WebAPI.Filters
                 context.HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 _logger.LogWarning("Client rule: {Message}", ce.Message);
             }
+            else if (context.Exception is NotFoundException nfe)
+            {
+                context.ModelState.AddModelError("notFound", nfe.Message);
+                context.HttpContext.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                _logger.LogWarning("Not found: {Message}", nfe.Message);
+            }
+            else if (context.Exception is BusinessException be)
+            {
+                context.ModelState.AddModelError("businessError", be.Message);
+                context.HttpContext.Response.StatusCode = (int)HttpStatusCode.Conflict;
+                _logger.LogWarning("Business rule conflict: {Message}", be.Message);
+            }
             else
             {
                 //context.ModelState.AddModelError("serverError", context.Exception.Message);

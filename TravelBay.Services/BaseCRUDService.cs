@@ -1,3 +1,4 @@
+using TravelBay.Model.Exceptions;
 using TravelBay.Model.SearchObjects;
 using TravelBay.Services.Database;
 using FluentValidation;
@@ -17,7 +18,7 @@ namespace TravelBay.Services
     public abstract class BaseCRUDService<TEntity, TResponse, TSearch, TInsertRequest, TUpdateRequest>
         : BaseReadService<TEntity, TResponse, TSearch>
         where TEntity : class
-        where TSearch : BaseSearchObject
+        where TSearch : BaseSearchObject, new()
     {
 
         protected readonly IValidator<TInsertRequest> _insertValidator;
@@ -100,10 +101,10 @@ namespace TravelBay.Services
             }
 
            
-            var entity = this._dbContext.Set<TEntity>().Find(id);
+            var entity = await this._dbContext.Set<TEntity>().FindAsync(id);
 
             if (entity == null)
-                throw new KeyNotFoundException($"{typeof(TEntity).Name} with id {id} not found.");
+                throw new NotFoundException($"{typeof(TEntity).Name} with id {id} not found.");
 
             MapUpdateRequestToEntity(request, entity);
 
@@ -124,10 +125,10 @@ namespace TravelBay.Services
         /// </summary>
         public virtual async Task DeleteAsync(int id)
         {
-            var entity = this._dbContext.Set<TEntity>().Find(id);
+            var entity = await this._dbContext.Set<TEntity>().FindAsync(id);
 
             if (entity == null)
-                throw new KeyNotFoundException($"{typeof(TEntity).Name} with id {id} not found.");
+                throw new NotFoundException($"{typeof(TEntity).Name} with id {id} not found.");
 
             this._dbContext.Set<TEntity>().Remove(entity);
             await this._dbContext.SaveChangesAsync();

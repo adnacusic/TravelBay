@@ -1,5 +1,6 @@
 using TravelBay.Common.Services.CryptoService;
 using TravelBay.Model.Access;
+using TravelBay.Model.Constants;
 using TravelBay.Model.Exceptions;
 using TravelBay.Model.Requests;
 using TravelBay.Model.Responses;
@@ -8,10 +9,7 @@ using TravelBay.Services.Database;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace TravelBay.Services
@@ -26,24 +24,23 @@ namespace TravelBay.Services
         }
 
 
-        protected override IEnumerable<User> ApplyFilters(IEnumerable<User> query, UserSearch? search)
+        protected override IQueryable<User> ApplyFilters(IQueryable<User> query, UserSearch? search)
         {
             if (search != null)
             {
                 if (!string.IsNullOrWhiteSpace(search.Email))
                 {
-                    query = query.Where(u => u.Email.Contains(search.Email, StringComparison.OrdinalIgnoreCase));
+                    query = query.Where(u => u.Email.Contains(search.Email));
                 }
 
                 if (!string.IsNullOrWhiteSpace(search.Username))
                 {
-                    query = query.Where(u => u.Username.Contains(search.Username, StringComparison.OrdinalIgnoreCase));
+                    query = query.Where(u => u.Username.Contains(search.Username));
                 }
 
                 if (!string.IsNullOrWhiteSpace(search.Name))
                 {
-                    query = query.Where(u => u.FirstName.Contains(search.Name, StringComparison.OrdinalIgnoreCase)
-                                          || u.LastName.Contains(search.Name, StringComparison.OrdinalIgnoreCase));
+                    query = query.Where(u => u.FirstName.Contains(search.Name) || u.LastName.Contains(search.Name));
                 }
 
                 if (search.IsActive.HasValue)
@@ -76,18 +73,31 @@ namespace TravelBay.Services
             // Check if email or username already exists
             if (await _dbContext.Users.AnyAsync(u => u.Email == request.Email))
             {
-                throw new InvalidOperationException($"Email '{request.Email}' is already in use.");
+                throw new ClientException($"Email '{request.Email}' is already in use.");
             }
 
             if (await _dbContext.Users.AnyAsync(u => u.Username == request.Username))
             {
-                throw new InvalidOperationException($"Username '{request.Username}' is already in use.");
+                throw new ClientException($"Username '{request.Username}' is already in use.");
             }
 
             var entity = MapInsertRequestToEntity(request);
             entity.CreatedAt = DateTime.UtcNow;
 
             _dbContext.Users.Add(entity);
+            await _dbContext.SaveChangesAsync();
+
+            // Every self-registered or admin-created user gets the default "User" role —
+            // clients can never request a role directly (UserInsertRequest has no such field).
+            var defaultRole = await _dbContext.Roles.FirstOrDefaultAsync(r => r.Name == RoleNames.User)
+                ?? throw new InvalidOperationException($"Seed role '{RoleNames.User}' is missing.");
+
+            _dbContext.UserRoles.Add(new UserRole
+            {
+                UserId = entity.Id,
+                RoleId = defaultRole.Id,
+                DateAssigned = DateTime.UtcNow
+            });
             await _dbContext.SaveChangesAsync();
 
             return _mapper.Map<UserResponse>(entity);
@@ -101,37 +111,37 @@ namespace TravelBay.Services
             var entity = await _dbContext.Users.FindAsync(id);
             if (entity == null)
             {
-                throw new KeyNotFoundException($"User with id {id} not found.");
+                throw new NotFoundException($"User with id {id} not found.");
             }
 
             // Check if email or username already exists
             if (await _dbContext.Users.AnyAsync(u => u.Email == request.Email && u.Id != id))
             {
-                throw new InvalidOperationException($"Email '{request.Email}' is already in use.");
+                throw new ClientException($"Email '{request.Email}' is already in use.");
             }
 
             if (await _dbContext.Users.AnyAsync(u => u.Username == request.Username && u.Id != id))
             {
-                throw new InvalidOperationException($"Username '{request.Username}' is already in use.");
+                throw new ClientException($"Username '{request.Username}' is already in use.");
             }
 
             MapUpdateRequestToEntity(request, entity);
 
-            _dbContext.Users.Update(entity);
             await _dbContext.SaveChangesAsync();
 
             return _mapper.Map<UserResponse>(entity);
         }
 
+        /// <summary>Accounts are deactivated (soft), never hard-deleted — they're tied to reviews, trip plans, etc.</summary>
         public override async Task DeleteAsync(int id)
         {
-            var entity = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
+            var entity = await _dbContext.Users.FindAsync(id);
             if (entity == null)
             {
-                throw new KeyNotFoundException($"User with id {id} not found.");
+                throw new NotFoundException($"User with id {id} not found.");
             }
 
-            _dbContext.Users.Remove(entity);
+            entity.IsActive = false;
             await _dbContext.SaveChangesAsync();
         }
 
@@ -173,24 +183,46 @@ namespace TravelBay.Services
             return response;
         }
 
-        public async Task ChangePasswordAsync(UserPasswordChangeRequest request)
+        public async Task ChangePasswordAsync(int userId, UserPasswordChangeRequest request)
         {
-            var user = _dbContext.Users.FirstOrDefault(u => u.Id == request.Id);
-
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
-                throw new Exception("User not found");
+            {
+                throw new NotFoundException($"User with id {userId} not found.");
+            }
 
             if (!_cryptoService.Verify(user.PasswordHash, user.PasswordSalt, request.Password))
-                throw new Exception("Wrong credential");
+            {
+                throw new ClientException("Current password is incorrect.");
+            }
 
-            if (!request.NewPassword.Equals(request.ConfirmNewPassword))
-                throw new Exception("Password confimation doen't match new password");
+            if (!string.Equals(request.NewPassword, request.ConfirmNewPassword, StringComparison.Ordinal))
+            {
+                throw new ClientException("Password confirmation does not match the new password.");
+            }
 
             user.PasswordSalt = _cryptoService.GenerateSlat();
             user.PasswordHash = _cryptoService.GenerateHash(request.NewPassword, user.PasswordSalt);
 
+            await _dbContext.SaveChangesAsync();
+        }
 
-            _dbContext.Users.Update(user);
+        public async Task ResetPasswordAsync(int userId, UserPasswordResetRequest request)
+        {
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null)
+            {
+                throw new NotFoundException($"User with id {userId} not found.");
+            }
+
+            if (!string.Equals(request.NewPassword, request.ConfirmNewPassword, StringComparison.Ordinal))
+            {
+                throw new ClientException("Password confirmation does not match the new password.");
+            }
+
+            user.PasswordSalt = _cryptoService.GenerateSlat();
+            user.PasswordHash = _cryptoService.GenerateHash(request.NewPassword, user.PasswordSalt);
+
             await _dbContext.SaveChangesAsync();
         }
     }

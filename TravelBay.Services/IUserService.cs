@@ -9,6 +9,11 @@ namespace TravelBay.Services
     {
         Task<UserSensitveResponse?> GetByUsernameAsync(string username);
         Task<UserResponse?> GetWithRoleByIdAsync(int id);
-        Task ChangePasswordAsync(UserPasswordChangeRequest request);
+
+        /// <summary>Current-user self-service change; verifies the old password first.</summary>
+        Task ChangePasswordAsync(int userId, UserPasswordChangeRequest request);
+
+        /// <summary>Admin resetting another user's password; no old password check.</summary>
+        Task ResetPasswordAsync(int userId, UserPasswordResetRequest request);
     }
 }

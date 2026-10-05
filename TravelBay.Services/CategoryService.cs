@@ -18,13 +18,13 @@ namespace TravelBay.Services
         {
         }
 
-        protected override IEnumerable<Category> ApplyFilters(IEnumerable<Category> query, CategorySearchObject? search)
+        protected override IQueryable<Category> ApplyFilters(IQueryable<Category> query, CategorySearchObject? search)
         {
             if (search != null)
             {
                 if (!string.IsNullOrWhiteSpace(search.Name))
                 {
-                    query = query.Where(c => c.Name.Contains(search.Name, StringComparison.OrdinalIgnoreCase));
+                    query = query.Where(c => c.Name.Contains(search.Name));
                 }
             }
 

@@ -1,17 +1,23 @@
-# ecommerce_desktop
+# TravelBay — admin desktop (Flutter, Windows)
 
-A new Flutter project.
+Administratorska aplikacija za TravelBay API. Prijava je dozvoljena samo korisnicima s ulogom `Admin`.
 
-## Getting Started
+## Pokretanje
 
-This project is a starting point for a Flutter application.
+Preduslovi: Flutter SDK (Windows desktop), uključen Windows Developer Mode, pokrenut API
+(`docker compose up -d` u korijenu repozitorija).
 
-A few resources to get you started if this is your first Flutter project:
+```
+flutter pub get
+flutter run -d windows --dart-define=baseUrl=http://localhost:8080/
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+`baseUrl` se zadaje isključivo preko `--dart-define`; bez njega se koristi `http://localhost:8080/`.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Struktura
+
+- `lib/models` — DTO modeli (`json_serializable`; nakon izmjene: `dart run build_runner build`)
+- `lib/providers` — `BaseProvider<T>` (paginirana lista, get/insert/update/remove, Bearer token,
+  automatsko obnavljanje tokena) i provideri po resursu
+- `lib/layouts/master_screen.dart` — bočni meni i zaglavlje stranice
+- `lib/screens` — ekrani po modulima

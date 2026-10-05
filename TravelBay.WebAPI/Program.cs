@@ -116,6 +116,7 @@ builder.Services.AddScoped<IUserPreferenceService, UserPreferenceService>();
 builder.Services.AddScoped<IViewHistoryService, ViewHistoryService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IRecommendationService, RecommendationService>();

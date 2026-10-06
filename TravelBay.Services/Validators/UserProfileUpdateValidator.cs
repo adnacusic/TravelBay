@@ -3,9 +3,9 @@ using FluentValidation;
 
 namespace TravelBay.Services.Validators
 {
-    public class UserInsertValidator : AbstractValidator<UserInsertRequest>
+    public class UserProfileUpdateValidator : AbstractValidator<UserProfileUpdateRequest>
     {
-        public UserInsertValidator()
+        public UserProfileUpdateValidator()
         {
             RuleFor(x => x.FirstName)
                 .NotEmpty().WithMessage("First name is required.")
@@ -25,14 +25,16 @@ namespace TravelBay.Services.Validators
                 .MinimumLength(3).WithMessage("Username must be at least 3 characters.")
                 .MaximumLength(100).WithMessage("Username cannot exceed 100 characters.");
 
-            RuleFor(x => x.Password)
-                .NotEmpty().WithMessage("Password is required.")
-                .MinimumLength(6).WithMessage("Password must be at least 6 characters.")
-                .MaximumLength(100).WithMessage("Password cannot exceed 100 characters.");
-
             RuleFor(x => x.PhoneNumber)
                 .Matches(PhoneNumberRules.Pattern).WithMessage(PhoneNumberRules.Message)
-                .When(x => !string.IsNullOrEmpty(x.PhoneNumber));
+                .When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber));
         }
+    }
+
+    /// <summary>Shared phone format: optional leading +, then 6–20 digits, spaces, slashes or dashes.</summary>
+    public static class PhoneNumberRules
+    {
+        public const string Pattern = @"^\+?[0-9 /-]{6,20}$";
+        public const string Message = "Phone number may contain only digits, spaces, '/', '-' and a leading '+' (6-20 characters).";
     }
 }

@@ -21,5 +21,10 @@ namespace TravelBay.Model.SearchObjects
         /// Filter by active/inactive users.
         /// </summary>
         public bool? IsActive { get; set; }
+
+        /// <summary>
+        /// One search box: matches first name, last name, username or email (partial match).
+        /// </summary>
+        public string? SearchText { get; set; }
     }
 }

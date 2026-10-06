@@ -73,7 +73,11 @@ public class ReviewStateMachine : IReviewStateMachine
 
     private async Task<Review> LoadPendingAsync(int reviewId)
     {
-        var review = await _dbContext.Reviews.Include(r => r.User).FirstOrDefaultAsync(r => r.Id == reviewId)
+        var review = await _dbContext.Reviews
+            .Include(r => r.User)
+            .Include(r => r.Destination)
+            .Include(r => r.ModeratedByUser)
+            .FirstOrDefaultAsync(r => r.Id == reviewId)
             ?? throw new NotFoundException($"Review with id {reviewId} not found.");
 
         if (review.Status != ReviewStatus.Pending)

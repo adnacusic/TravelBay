@@ -45,7 +45,10 @@ public class ReviewService
 
     protected override async Task<IQueryable<Review>> IncludeRelatedEntitiesAsync(ReviewSearchObject? search, IQueryable<Review> query = null!)
     {
-        return await Task.FromResult(query.Include(r => r.User));
+        return await Task.FromResult(query
+            .Include(r => r.User)
+            .Include(r => r.Destination)
+            .Include(r => r.ModeratedByUser));
     }
 
     protected override IQueryable<Review> ApplyFilters(IQueryable<Review> query, ReviewSearchObject? search)
@@ -115,6 +118,8 @@ public class ReviewService
         var loaded = await _dbContext.Reviews
             .AsNoTracking()
             .Include(r => r.User)
+            .Include(r => r.Destination)
+            .Include(r => r.ModeratedByUser)
             .FirstAsync(r => r.Id == review.Id);
 
         return _mapper.Map<ReviewResponse>(loaded);
@@ -145,6 +150,8 @@ public class ReviewService
         var loaded = await _dbContext.Reviews
             .AsNoTracking()
             .Include(r => r.User)
+            .Include(r => r.Destination)
+            .Include(r => r.ModeratedByUser)
             .FirstAsync(r => r.Id == id);
 
         return _mapper.Map<ReviewResponse>(loaded);

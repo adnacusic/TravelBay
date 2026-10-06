@@ -514,11 +514,11 @@ namespace TravelBay.Services.Database
         private void SeedNews(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<News>().HasData(
-                new { Id = 1, Title = "Sarajevo uvodi nove turističke rute", Content = "Grad Sarajevo pokreće tri nove pješačke ture kroz historijsko jezgro grada.", ImageUrl = "https://picsum.photos/seed/travelbay-news-1/800/400", CreatedAt = SeedBaseDate.AddDays(48) },
-                new { Id = 2, Title = "Rekordna sezona na Jadranu", Content = "Hrvatska i Crna Gora bilježe rekordan broj turista ove ljetne sezone.", ImageUrl = "https://picsum.photos/seed/travelbay-news-2/800/400", CreatedAt = SeedBaseDate.AddDays(49) },
-                new { Id = 3, Title = "Nacionalni parkovi otvaraju nove staze", Content = "NP Una i NP Sutjeska proširuju mrežu markiranih planinarskih staza.", ImageUrl = "https://picsum.photos/seed/travelbay-news-3/800/400", CreatedAt = SeedBaseDate.AddDays(50) },
-                new { Id = 4, Title = "Gastronomski festival u Mostaru", Content = "Hercegovačka kulinarska tura ugostit će regionalni gastro festival.", ImageUrl = "https://picsum.photos/seed/travelbay-news-4/800/400", CreatedAt = SeedBaseDate.AddDays(51) },
-                new { Id = 5, Title = "TravelBay predstavlja preporuke putovanja", Content = "Novi sistem preporuka pomaže korisnicima da pronađu destinacije po mjeri.", ImageUrl = "https://picsum.photos/seed/travelbay-news-5/800/400", CreatedAt = SeedBaseDate.AddDays(53) }
+                new { Id = 1, Title = "Sarajevo uvodi nove turističke rute", Content = "Grad Sarajevo pokreće tri nove pješačke ture kroz historijsko jezgro grada.", ImageUrl = "https://picsum.photos/seed/travelbay-news-1/800/400", PublishedAt = SeedBaseDate.AddDays(48), CreatedAt = SeedBaseDate.AddDays(48) },
+                new { Id = 2, Title = "Rekordna sezona na Jadranu", Content = "Hrvatska i Crna Gora bilježe rekordan broj turista ove ljetne sezone.", ImageUrl = "https://picsum.photos/seed/travelbay-news-2/800/400", PublishedAt = SeedBaseDate.AddDays(49), CreatedAt = SeedBaseDate.AddDays(49) },
+                new { Id = 3, Title = "Nacionalni parkovi otvaraju nove staze", Content = "NP Una i NP Sutjeska proširuju mrežu markiranih planinarskih staza.", ImageUrl = "https://picsum.photos/seed/travelbay-news-3/800/400", PublishedAt = SeedBaseDate.AddDays(50), CreatedAt = SeedBaseDate.AddDays(50) },
+                new { Id = 4, Title = "Gastronomski festival u Mostaru", Content = "Hercegovačka kulinarska tura ugostit će regionalni gastro festival.", ImageUrl = "https://picsum.photos/seed/travelbay-news-4/800/400", PublishedAt = SeedBaseDate.AddDays(51), CreatedAt = SeedBaseDate.AddDays(51) },
+                new { Id = 5, Title = "TravelBay predstavlja preporuke putovanja", Content = "Novi sistem preporuka pomaže korisnicima da pronađu destinacije po mjeri.", ImageUrl = "https://picsum.photos/seed/travelbay-news-5/800/400", PublishedAt = SeedBaseDate.AddDays(53), CreatedAt = SeedBaseDate.AddDays(53) }
             );
         }
 

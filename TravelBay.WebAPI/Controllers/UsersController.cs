@@ -49,10 +49,29 @@ public class UsersController : BaseCRUDController<UserResponse, UserSearch, User
 
     /// <summary>Deactivates the account (IsActive = false) — never a hard delete.</summary>
     [Authorize(Roles = RoleNames.Admin)]
-    public override Task<IActionResult> Delete(int id)
+    public override async Task<IActionResult> Delete(int id)
     {
-        return base.Delete(id);
+        await _service.SetActiveAsync(id, false, CurrentUserId());
+        return NoContent();
     }
+
+    [Authorize(Roles = RoleNames.Admin)]
+    [HttpPut("{id}/Activate")]
+    public async Task<ActionResult<UserResponse>> Activate(int id) =>
+        Ok(await _service.SetActiveAsync(id, true, CurrentUserId()));
+
+    [Authorize(Roles = RoleNames.Admin)]
+    [HttpPut("{id}/Deactivate")]
+    public async Task<ActionResult<UserResponse>> Deactivate(int id) =>
+        Ok(await _service.SetActiveAsync(id, false, CurrentUserId()));
+
+    [Authorize(Roles = RoleNames.Admin)]
+    [HttpGet("Stats")]
+    public async Task<ActionResult<UserStatsResponse>> GetStats() => Ok(await _service.GetStatsAsync());
+
+    [Authorize(Roles = RoleNames.Admin)]
+    [HttpGet("{id}/Activity")]
+    public async Task<ActionResult<UserActivityResponse>> GetActivity(int id) => Ok(await _service.GetActivityAsync(id));
 
     [HttpGet("Me")]
     public async Task<ActionResult<UserResponse>> GetMe()
@@ -63,9 +82,9 @@ public class UsersController : BaseCRUDController<UserResponse, UserSearch, User
 
     /// <summary>Own-profile edit — no password field here; see Me/ChangePassword for that.</summary>
     [HttpPut("Me")]
-    public async Task<ActionResult<UserResponse>> UpdateMe([FromBody] UserUpdateRequest request)
+    public async Task<ActionResult<UserResponse>> UpdateMe([FromBody] UserProfileUpdateRequest request)
     {
-        var result = await _service.UpdateAsync(CurrentUserId(), request);
+        var result = await _service.UpdateProfileAsync(CurrentUserId(), request);
         return Ok(result);
     }
 

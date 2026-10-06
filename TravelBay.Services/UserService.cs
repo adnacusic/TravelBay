@@ -1,6 +1,6 @@
 using TravelBay.Common.Services.CryptoService;
-using TravelBay.Model.Access;
 using TravelBay.Model.Constants;
+using TravelBay.Model.Enums;
 using TravelBay.Model.Exceptions;
 using TravelBay.Model.Requests;
 using TravelBay.Model.Responses;
@@ -16,13 +16,35 @@ namespace TravelBay.Services
 {
     public class UserService : BaseCRUDService<User, UserResponse, UserSearch, UserInsertRequest, UserUpdateRequest>, IUserService
     {
+        private const int NewUsersPeriodDays = 30;
+
         private readonly ICryptoService _cryptoService;
-        public UserService(TravelBayDbContext dbContext, MapsterMapper.IMapper mapper, IValidator<UserInsertRequest> insertValidator, IValidator<UserUpdateRequest> updateValidator, ICryptoService cryptoService)
+        private readonly IValidator<UserProfileUpdateRequest> _profileValidator;
+        private readonly IValidator<UserPasswordChangeRequest> _passwordChangeValidator;
+        private readonly IValidator<UserPasswordResetRequest> _passwordResetValidator;
+
+        public UserService(
+            TravelBayDbContext dbContext,
+            MapsterMapper.IMapper mapper,
+            IValidator<UserInsertRequest> insertValidator,
+            IValidator<UserUpdateRequest> updateValidator,
+            IValidator<UserProfileUpdateRequest> profileValidator,
+            IValidator<UserPasswordChangeRequest> passwordChangeValidator,
+            IValidator<UserPasswordResetRequest> passwordResetValidator,
+            ICryptoService cryptoService)
             : base(dbContext, mapper, insertValidator, updateValidator)
         {
             _cryptoService = cryptoService;
+            _profileValidator = profileValidator;
+            _passwordChangeValidator = passwordChangeValidator;
+            _passwordResetValidator = passwordResetValidator;
         }
 
+        /// <summary>Roles are part of every user response (mapped to UserResponse.Role).</summary>
+        protected override Task<IQueryable<User>> IncludeRelatedEntitiesAsync(UserSearch? search, IQueryable<User> query)
+        {
+            return base.IncludeRelatedEntitiesAsync(search, query.Include(u => u.UserRoles).ThenInclude(ur => ur.Role));
+        }
 
         protected override IQueryable<User> ApplyFilters(IQueryable<User> query, UserSearch? search)
         {
@@ -43,6 +65,15 @@ namespace TravelBay.Services
                     query = query.Where(u => u.FirstName.Contains(search.Name) || u.LastName.Contains(search.Name));
                 }
 
+                if (!string.IsNullOrWhiteSpace(search.SearchText))
+                {
+                    var text = search.SearchText.Trim();
+                    query = query.Where(u => u.FirstName.Contains(text)
+                        || u.LastName.Contains(text)
+                        || u.Username.Contains(text)
+                        || u.Email.Contains(text));
+                }
+
                 if (search.IsActive.HasValue)
                 {
                     query = query.Where(u => u.IsActive == search.IsActive.Value);
@@ -50,6 +81,22 @@ namespace TravelBay.Services
             }
 
             return query;
+        }
+
+        public override async Task<UserResponse> GetByIdAsync(int id)
+        {
+            var user = await _dbContext.Users
+                .AsNoTracking()
+                .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user == null)
+            {
+                throw new NotFoundException($"User with id {id} not found.");
+            }
+
+            return _mapper.Map<UserResponse>(user);
         }
 
         protected override User MapInsertRequestToEntity(UserInsertRequest request)
@@ -70,16 +117,7 @@ namespace TravelBay.Services
             // convert the resulting ValidationException into the standard error format.
             await _insertValidator.ValidateAndThrowAsync(request);
 
-            // Check if email or username already exists
-            if (await _dbContext.Users.AnyAsync(u => u.Email == request.Email))
-            {
-                throw new ClientException($"Email '{request.Email}' is already in use.");
-            }
-
-            if (await _dbContext.Users.AnyAsync(u => u.Username == request.Username))
-            {
-                throw new ClientException($"Username '{request.Username}' is already in use.");
-            }
+            await EnsureUniqueAsync(request.Email, request.Username, exceptUserId: null);
 
             var entity = MapInsertRequestToEntity(request);
             entity.CreatedAt = DateTime.UtcNow;
@@ -114,22 +152,35 @@ namespace TravelBay.Services
                 throw new NotFoundException($"User with id {id} not found.");
             }
 
-            // Check if email or username already exists
-            if (await _dbContext.Users.AnyAsync(u => u.Email == request.Email && u.Id != id))
-            {
-                throw new ClientException($"Email '{request.Email}' is already in use.");
-            }
-
-            if (await _dbContext.Users.AnyAsync(u => u.Username == request.Username && u.Id != id))
-            {
-                throw new ClientException($"Username '{request.Username}' is already in use.");
-            }
+            await EnsureUniqueAsync(request.Email, request.Username, exceptUserId: id);
 
             MapUpdateRequestToEntity(request, entity);
 
             await _dbContext.SaveChangesAsync();
 
-            return _mapper.Map<UserResponse>(entity);
+            return await GetByIdAsync(id);
+        }
+
+        public async Task<UserResponse> UpdateProfileAsync(int userId, UserProfileUpdateRequest request)
+        {
+            await _profileValidator.ValidateAndThrowAsync(request);
+
+            var entity = await _dbContext.Users.FindAsync(userId)
+                ?? throw new NotFoundException($"User with id {userId} not found.");
+
+            var email = request.Email.Trim();
+            var username = request.Username.Trim();
+            await EnsureUniqueAsync(email, username, exceptUserId: userId);
+
+            entity.FirstName = request.FirstName.Trim();
+            entity.LastName = request.LastName.Trim();
+            entity.Email = email;
+            entity.Username = username;
+            entity.PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim();
+
+            await _dbContext.SaveChangesAsync();
+
+            return await GetByIdAsync(userId);
         }
 
         /// <summary>Accounts are deactivated (soft), never hard-deleted — they're tied to reviews, trip plans, etc.</summary>
@@ -143,6 +194,98 @@ namespace TravelBay.Services
 
             entity.IsActive = false;
             await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<UserResponse> SetActiveAsync(int id, bool isActive, int currentUserId)
+        {
+            if (!isActive && id == currentUserId)
+            {
+                throw new ClientException("You cannot deactivate your own account.");
+            }
+
+            var entity = await _dbContext.Users.FindAsync(id)
+                ?? throw new NotFoundException($"User with id {id} not found.");
+
+            entity.IsActive = isActive;
+            await _dbContext.SaveChangesAsync();
+
+            return await GetByIdAsync(id);
+        }
+
+        public async Task<UserStatsResponse> GetStatsAsync()
+        {
+            var newSince = DateTime.UtcNow.AddDays(-NewUsersPeriodDays);
+
+            var counts = await _dbContext.Users
+                .AsNoTracking()
+                .GroupBy(_ => 1)
+                .Select(g => new
+                {
+                    Total = g.Count(),
+                    Active = g.Count(u => u.IsActive),
+                    New = g.Count(u => u.CreatedAt >= newSince)
+                })
+                .FirstOrDefaultAsync();
+
+            var administrators = await _dbContext.UserRoles
+                .AsNoTracking()
+                .Where(ur => ur.Role.Name == RoleNames.Admin)
+                .Select(ur => ur.UserId)
+                .Distinct()
+                .CountAsync();
+
+            var total = counts?.Total ?? 0;
+            var active = counts?.Active ?? 0;
+
+            return new UserStatsResponse
+            {
+                TotalUsers = total,
+                ActiveUsers = active,
+                InactiveUsers = total - active,
+                Administrators = administrators,
+                NewUsers = counts?.New ?? 0,
+                NewUsersPeriodDays = NewUsersPeriodDays
+            };
+        }
+
+        public async Task<UserActivityResponse> GetActivityAsync(int id)
+        {
+            var exists = await _dbContext.Users.AnyAsync(u => u.Id == id);
+            if (!exists)
+            {
+                throw new NotFoundException($"User with id {id} not found.");
+            }
+
+            var reviews = await _dbContext.Reviews
+                .AsNoTracking()
+                .Where(r => r.UserId == id)
+                .GroupBy(r => r.Status)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            int ReviewsWith(ReviewStatus status) => reviews.Where(r => r.Status == status).Sum(r => r.Count);
+
+            return new UserActivityResponse
+            {
+                ReviewCount = reviews.Sum(r => r.Count),
+                PendingReviewCount = ReviewsWith(ReviewStatus.Pending),
+                ApprovedReviewCount = ReviewsWith(ReviewStatus.Approved),
+                RejectedReviewCount = ReviewsWith(ReviewStatus.Rejected),
+                TripPlanCount = await _dbContext.TripPlans.CountAsync(t => t.UserId == id),
+                CollectionCount = await _dbContext.Collections.CountAsync(c => c.UserId == id),
+                SavedDestinationCount = await _dbContext.SavedDestinations.CountAsync(s => s.UserId == id),
+                ViewCount = await _dbContext.ViewHistories.CountAsync(v => v.UserId == id)
+            };
+        }
+
+        public async Task RecordLoginAsync(int userId)
+        {
+            var entity = await _dbContext.Users.FindAsync(userId);
+            if (entity != null)
+            {
+                entity.LastLoginAt = DateTime.UtcNow;
+                await _dbContext.SaveChangesAsync();
+            }
         }
 
         public async Task<UserSensitveResponse?> GetByUsernameAsync(string username)
@@ -185,6 +328,8 @@ namespace TravelBay.Services
 
         public async Task ChangePasswordAsync(int userId, UserPasswordChangeRequest request)
         {
+            await _passwordChangeValidator.ValidateAndThrowAsync(request);
+
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
             {
@@ -196,11 +341,6 @@ namespace TravelBay.Services
                 throw new ClientException("Current password is incorrect.");
             }
 
-            if (!string.Equals(request.NewPassword, request.ConfirmNewPassword, StringComparison.Ordinal))
-            {
-                throw new ClientException("Password confirmation does not match the new password.");
-            }
-
             user.PasswordSalt = _cryptoService.GenerateSlat();
             user.PasswordHash = _cryptoService.GenerateHash(request.NewPassword, user.PasswordSalt);
 
@@ -209,21 +349,31 @@ namespace TravelBay.Services
 
         public async Task ResetPasswordAsync(int userId, UserPasswordResetRequest request)
         {
+            await _passwordResetValidator.ValidateAndThrowAsync(request);
+
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
             {
                 throw new NotFoundException($"User with id {userId} not found.");
             }
 
-            if (!string.Equals(request.NewPassword, request.ConfirmNewPassword, StringComparison.Ordinal))
-            {
-                throw new ClientException("Password confirmation does not match the new password.");
-            }
-
             user.PasswordSalt = _cryptoService.GenerateSlat();
             user.PasswordHash = _cryptoService.GenerateHash(request.NewPassword, user.PasswordSalt);
 
             await _dbContext.SaveChangesAsync();
+        }
+
+        private async Task EnsureUniqueAsync(string? email, string? username, int? exceptUserId)
+        {
+            if (email != null && await _dbContext.Users.AnyAsync(u => u.Email == email && u.Id != exceptUserId))
+            {
+                throw new ClientException($"Email '{email}' is already in use.");
+            }
+
+            if (username != null && await _dbContext.Users.AnyAsync(u => u.Username == username && u.Id != exceptUserId))
+            {
+                throw new ClientException($"Username '{username}' is already in use.");
+            }
         }
     }
 }

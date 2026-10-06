@@ -78,11 +78,16 @@ TypeAdapterConfig<Destination, DestinationResponse>.NewConfig()
     .Map(dest => dest.CityName, src => src.City != null ? src.City.Name : string.Empty)
     .Map(dest => dest.Images, src => src.Images.OrderBy(i => i.OrderIndex));
 TypeAdapterConfig<Category, CategoryResponse>.NewConfig().IgnoreNullValues(true);
-TypeAdapterConfig<User, UserResponse>.NewConfig().IgnoreNullValues(true);
+TypeAdapterConfig<User, UserResponse>.NewConfig()
+    .IgnoreNullValues(true)
+    .Map(dest => dest.Role, src => src.UserRoles.Select(ur => ur.Role.Name).FirstOrDefault());
 TypeAdapterConfig<UserUpdateRequest, User>.NewConfig().IgnoreNullValues(true);
 TypeAdapterConfig<Asset, AssetResponse>.NewConfig().IgnoreNullValues(true);
 TypeAdapterConfig<Review, ReviewResponse>.NewConfig()
-    .Map(dest => dest.ReviewerDisplayName, src => $"{src.User.FirstName} {src.User.LastName}".Trim());
+    .Map(dest => dest.ReviewerDisplayName, src => $"{src.User.FirstName} {src.User.LastName}".Trim())
+    .Map(dest => dest.DestinationName, src => src.Destination != null ? src.Destination.Name : string.Empty)
+    .Map(dest => dest.ModeratedByDisplayName,
+        src => src.ModeratedByUser != null ? $"{src.ModeratedByUser.FirstName} {src.ModeratedByUser.LastName}".Trim() : null);
 TypeAdapterConfig<City, CityResponse>.NewConfig()
     .Map(dest => dest.CountryName, src => src.Country.Name);
 
@@ -138,6 +143,9 @@ builder.Services.AddScoped<IValidator<NewsInsertRequest>, NewsInsertValidator>()
 builder.Services.AddScoped<IValidator<NewsUpdateRequest>, NewsUpdateValidator>();
 builder.Services.AddScoped<IValidator<UserInsertRequest>, UserInsertValidator>();
 builder.Services.AddScoped<IValidator<UserUpdateRequest>, UserUpdateValidator>();
+builder.Services.AddScoped<IValidator<UserProfileUpdateRequest>, UserProfileUpdateValidator>();
+builder.Services.AddScoped<IValidator<UserPasswordChangeRequest>, UserPasswordChangeValidator>();
+builder.Services.AddScoped<IValidator<UserPasswordResetRequest>, UserPasswordResetValidator>();
 builder.Services.AddScoped<IValidator<AssetInsertRequest>, AssetInsertValidator>();
 builder.Services.AddScoped<IValidator<AssetUpdateRequest>, AssetUpdateValidator>();
 builder.Services.AddScoped<IValidator<ReviewInsertRequest>, ReviewInsertValidator>();

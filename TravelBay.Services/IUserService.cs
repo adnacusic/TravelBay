@@ -10,6 +10,17 @@ namespace TravelBay.Services
         Task<UserSensitveResponse?> GetByUsernameAsync(string username);
         Task<UserResponse?> GetWithRoleByIdAsync(int id);
 
+        /// <summary>Own-profile edit; never touches account status or role.</summary>
+        Task<UserResponse> UpdateProfileAsync(int userId, UserProfileUpdateRequest request);
+
+        /// <summary>Admin (de)activation; an admin can never deactivate their own account.</summary>
+        Task<UserResponse> SetActiveAsync(int id, bool isActive, int currentUserId);
+
+        Task<UserStatsResponse> GetStatsAsync();
+        Task<UserActivityResponse> GetActivityAsync(int id);
+
+        Task RecordLoginAsync(int userId);
+
         /// <summary>Current-user self-service change; verifies the old password first.</summary>
         Task ChangePasswordAsync(int userId, UserPasswordChangeRequest request);
 

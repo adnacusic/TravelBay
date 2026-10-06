@@ -45,6 +45,8 @@ namespace TravelBay.WebAPI.Services.AccessManager
                 throw new ClientException("User account is deactivated.");
             }
 
+            await _userService.RecordLoginAsync(user.Id);
+
             var accessToken = GenerateToken(user);
             var refreshTokenValue = GenerateRefreshToken();
 

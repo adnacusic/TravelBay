@@ -134,6 +134,7 @@ public class RecommendationService : IRecommendationService
         var destinations = await _dbContext.Destinations
             .AsNoTracking()
             .Include(d => d.Category)
+            .Include(d => d.City)
             .Include(d => d.Images)
             .Where(d => ids.Contains(d.Id))
             .ToDictionaryAsync(d => d.Id);

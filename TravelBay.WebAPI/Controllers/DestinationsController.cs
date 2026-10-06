@@ -20,4 +20,10 @@ public class DestinationsController : BaseCRUDController<DestinationResponse, De
 
     [AllowAnonymous]
     public override Task<ActionResult<DestinationResponse>> GetById(int id) => base.GetById(id);
+
+    /// <summary>Most viewed destinations, then by approved reviews and average rating; ?top=N (1-50, default 10).</summary>
+    [AllowAnonymous]
+    [HttpGet("Popular")]
+    public async Task<PageResult<DestinationResponse>> GetPopular([FromQuery] int? top) =>
+        await _service.GetPopularAsync(top);
 }

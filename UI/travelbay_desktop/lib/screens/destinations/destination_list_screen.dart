@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -14,6 +12,7 @@ import '../../utils/dialogs.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/network_thumbnail.dart';
 import '../../widgets/pagination_bar.dart';
+import '../../widgets/search_field.dart';
 import '../../widgets/status_chip.dart';
 import 'destination_form_screen.dart';
 
@@ -26,10 +25,8 @@ class DestinationListScreen extends StatefulWidget {
 
 class _DestinationListScreenState extends State<DestinationListScreen> {
   static const _pageSize = 10;
-  static const _searchDebounce = Duration(milliseconds: 400);
 
   final _searchController = TextEditingController();
-  Timer? _debounce;
 
   List<Category> _categories = [];
   int? _categoryFilter;
@@ -51,7 +48,6 @@ class _DestinationListScreenState extends State<DestinationListScreen> {
 
   @override
   void dispose() {
-    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -115,11 +111,6 @@ class _DestinationListScreenState extends State<DestinationListScreen> {
         setState(() => _isLoading = false);
       }
     }
-  }
-
-  void _onSearchChanged(String _) {
-    _debounce?.cancel();
-    _debounce = Timer(_searchDebounce, () => _loadPage(1));
   }
 
   void _clearFilters() {
@@ -209,17 +200,10 @@ class _DestinationListScreenState extends State<DestinationListScreen> {
   Widget _buildFilters() {
     return Row(
       children: [
-        SizedBox(
-          width: 320,
-          child: TextField(
-            controller: _searchController,
-            onChanged: _onSearchChanged,
-            onSubmitted: (_) => _loadPage(1),
-            decoration: const InputDecoration(
-              labelText: 'Pretraga po nazivu',
-              prefixIcon: Icon(Icons.search),
-            ),
-          ),
+        SearchField(
+          label: 'Pretraga po nazivu',
+          controller: _searchController,
+          onSearch: (_) => _loadPage(1),
         ),
         const SizedBox(width: 16),
         SizedBox(

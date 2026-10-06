@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
+import '../screens/categories/category_list_screen.dart';
 import '../screens/dashboard_screen.dart';
 import '../screens/destinations/destination_list_screen.dart';
 import '../screens/login_screen.dart';
+import '../screens/news/news_list_screen.dart';
+import '../screens/profile/profile_screen.dart';
+import '../screens/reference_data/reference_data_screen.dart';
+import '../screens/reviews/review_list_screen.dart';
+import '../screens/users/user_list_screen.dart';
 import '../utils/app_navigator.dart';
 import '../utils/dialogs.dart';
 
@@ -39,7 +45,7 @@ class _MenuEntry {
   final String? unavailableReason;
 }
 
-const _inProgress = 'Modul je u izradi.';
+const _reportsComingSoon = 'Uskoro: PDF izvještaji su u izradi.';
 
 final _menu = <_MenuEntry>[
   _MenuEntry(
@@ -54,41 +60,41 @@ final _menu = <_MenuEntry>[
     Icons.place_outlined,
     builder: () => const DestinationListScreen(),
   ),
-  const _MenuEntry(
+  _MenuEntry(
     AdminSection.users,
     'Korisnici',
     Icons.people_outline,
-    unavailableReason: _inProgress,
+    builder: () => const UserListScreen(),
   ),
-  const _MenuEntry(
+  _MenuEntry(
     AdminSection.reviews,
     'Recenzije',
     Icons.rate_review_outlined,
-    unavailableReason: _inProgress,
+    builder: () => const ReviewListScreen(),
   ),
-  const _MenuEntry(
+  _MenuEntry(
     AdminSection.categories,
     'Kategorije',
     Icons.category_outlined,
-    unavailableReason: _inProgress,
+    builder: () => const CategoryListScreen(),
   ),
-  const _MenuEntry(
+  _MenuEntry(
     AdminSection.referenceData,
     'Države i gradovi',
     Icons.public_outlined,
-    unavailableReason: _inProgress,
+    builder: () => const ReferenceDataScreen(),
   ),
-  const _MenuEntry(
+  _MenuEntry(
     AdminSection.news,
     'Novosti',
     Icons.newspaper_outlined,
-    unavailableReason: _inProgress,
+    builder: () => const NewsListScreen(),
   ),
   const _MenuEntry(
     AdminSection.reports,
     'Izvještaji',
     Icons.picture_as_pdf_outlined,
-    unavailableReason: _inProgress,
+    unavailableReason: _reportsComingSoon,
   ),
   const _MenuEntry(
     AdminSection.aiAgents,
@@ -97,11 +103,11 @@ final _menu = <_MenuEntry>[
     unavailableReason:
         'Uskoro: AI agenti za ključne riječi i slike dolaze s AI worker servisom.',
   ),
-  const _MenuEntry(
+  _MenuEntry(
     AdminSection.profile,
     'Moj profil',
     Icons.account_circle_outlined,
-    unavailableReason: _inProgress,
+    builder: () => const ProfileScreen(),
   ),
 ];
 

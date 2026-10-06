@@ -7,6 +7,7 @@ import '../providers/dashboard_provider.dart';
 import '../utils/app_navigator.dart';
 import '../utils/dialogs.dart';
 import '../utils/formatters.dart';
+import '../widgets/stat_card.dart';
 import '../widgets/status_chip.dart';
 import 'destinations/destination_form_screen.dart';
 
@@ -89,23 +90,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
           spacing: 16,
           runSpacing: 16,
           children: [
-            _StatCard(
+            StatCard(
               icon: Icons.place_outlined,
               label: 'Destinacije',
               value: '${stats.totalDestinations}',
             ),
-            _StatCard(
+            StatCard(
               icon: Icons.people_outline,
               label: 'Korisnici',
               value: '${stats.totalUsers}',
             ),
-            _StatCard(
+            StatCard(
               icon: Icons.image_outlined,
               label: 'Sa slikom',
               value: '${stats.destinationsWithImages}',
               detail: 'Bez slike: ${stats.destinationsWithoutImages}',
             ),
-            _StatCard(
+            StatCard(
               icon: Icons.label_outline,
               label: 'Sa ključnim riječima',
               value: '${stats.destinationsWithKeywords}',
@@ -183,55 +184,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  const _StatCard({
-    required this.icon,
-    required this.label,
-    required this.value,
-    this.detail,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-  final String? detail;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return SizedBox(
-      width: 240,
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: theme.colorScheme.secondaryContainer,
-                foregroundColor: theme.colorScheme.onSecondaryContainer,
-                child: Icon(icon),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(label, style: theme.textTheme.bodyMedium),
-                    Text(value, style: theme.textTheme.headlineSmall),
-                    if (detail != null)
-                      Text(detail!, style: theme.textTheme.bodySmall),
-                  ],
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

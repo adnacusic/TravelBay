@@ -9,6 +9,7 @@ part of 'review.dart';
 Review _$ReviewFromJson(Map<String, dynamic> json) => Review(
   id: (json['id'] as num).toInt(),
   destinationId: (json['destinationId'] as num).toInt(),
+  destinationName: json['destinationName'] as String? ?? '',
   userId: (json['userId'] as num).toInt(),
   reviewerDisplayName: json['reviewerDisplayName'] as String? ?? '',
   rating: (json['rating'] as num).toInt(),
@@ -16,6 +17,7 @@ Review _$ReviewFromJson(Map<String, dynamic> json) => Review(
   status: $enumDecode(_$ReviewStatusEnumMap, json['status']),
   createdAt: const UtcDateTimeConverter().fromJson(json['createdAt'] as String),
   moderatedByUserId: (json['moderatedByUserId'] as num?)?.toInt(),
+  moderatedByDisplayName: json['moderatedByDisplayName'] as String?,
   moderatedAt: _$JsonConverterFromJson<String, DateTime>(
     json['moderatedAt'],
     const UtcDateTimeConverter().fromJson,
@@ -26,6 +28,7 @@ Review _$ReviewFromJson(Map<String, dynamic> json) => Review(
 Map<String, dynamic> _$ReviewToJson(Review instance) => <String, dynamic>{
   'id': instance.id,
   'destinationId': instance.destinationId,
+  'destinationName': instance.destinationName,
   'userId': instance.userId,
   'reviewerDisplayName': instance.reviewerDisplayName,
   'rating': instance.rating,
@@ -33,6 +36,7 @@ Map<String, dynamic> _$ReviewToJson(Review instance) => <String, dynamic>{
   'status': _$ReviewStatusEnumMap[instance.status]!,
   'createdAt': const UtcDateTimeConverter().toJson(instance.createdAt),
   'moderatedByUserId': instance.moderatedByUserId,
+  'moderatedByDisplayName': instance.moderatedByDisplayName,
   'moderatedAt': _$JsonConverterToJson<String, DateTime>(
     instance.moderatedAt,
     const UtcDateTimeConverter().toJson,

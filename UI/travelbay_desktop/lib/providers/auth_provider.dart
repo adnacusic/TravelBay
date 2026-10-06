@@ -13,6 +13,7 @@ class AuthProvider extends ChangeNotifier {
   static String? _accessToken;
   static String? _refreshToken;
   static JwtClaims? _claims;
+  static String? _displayNameOverride;
   static Future<bool>? _pendingRefresh;
 
   /// Set once in main.dart; called when the session cannot be renewed any more.
@@ -21,7 +22,16 @@ class AuthProvider extends ChangeNotifier {
   static String? get accessToken => _accessToken;
 
   bool get isAuthenticated => _accessToken != null;
-  String get displayName => _claims?.fullName ?? '';
+  String get displayName => _displayNameOverride ?? _claims?.fullName ?? '';
+
+  /// Used to recognise the signed-in admin in lists (e.g. no self-deactivation).
+  int? get currentUserId => _claims?.userId;
+
+  /// The JWT keeps the old name until it is renewed; show the saved one right away.
+  void updateDisplayName(String firstName, String lastName) {
+    _displayNameOverride = '$firstName $lastName'.trim();
+    notifyListeners();
+  }
 
   static const _jsonHeaders = {'Content-Type': 'application/json'};
 
@@ -116,6 +126,7 @@ class AuthProvider extends ChangeNotifier {
     _accessToken = null;
     _refreshToken = null;
     _claims = null;
+    _displayNameOverride = null;
   }
 
   static String get apiUnreachableMessage =>

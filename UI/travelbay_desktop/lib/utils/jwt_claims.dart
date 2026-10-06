@@ -15,6 +15,7 @@ class RoleNames {
   RoleNames._();
 
   static const admin = 'Admin';
+  static const user = 'User';
 }
 
 /// Reads the JWT payload. The signature is verified by the API on every call;
@@ -33,6 +34,8 @@ class JwtClaims {
     final payload = jsonDecode(utf8.decode(base64Url.decode(normalized)));
     return JwtClaims._(Map<String, dynamic>.from(payload as Map));
   }
+
+  int? get userId => int.tryParse(_payload[ClaimNames.id]?.toString() ?? '');
 
   String get firstName => _payload[ClaimNames.firstName]?.toString() ?? '';
   String get lastName => _payload[ClaimNames.lastName]?.toString() ?? '';

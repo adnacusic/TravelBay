@@ -1,7 +1,3 @@
-import 'dart:convert';
-import 'dart:typed_data';
-
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:provider/provider.dart';
@@ -17,10 +13,12 @@ import '../../providers/city_provider.dart';
 import '../../providers/country_provider.dart';
 import '../../providers/destination_image_provider.dart';
 import '../../providers/destination_provider.dart';
-import '../../utils/api_client_exception.dart';
 import '../../utils/dialogs.dart';
+import '../../utils/form_errors.dart';
 import '../../utils/formatters.dart';
+import '../../utils/image_files.dart';
 import '../../utils/validators.dart';
+import '../../widgets/image_url_dialog.dart';
 import '../../widgets/network_thumbnail.dart';
 import '../../widgets/status_chip.dart';
 
@@ -37,39 +35,20 @@ class DestinationFormScreen extends StatefulWidget {
 
 /// An image chosen in the form, uploaded only after the destination is saved.
 class _PendingImage {
-  _PendingImage.file({
-    required this.fileName,
-    required this.contentType,
-    required Uint8List this.bytes,
-  }) : url = null;
+  _PendingImage.file(PickedImage this.file) : url = null;
 
-  _PendingImage.url(String this.url)
-      : fileName = null,
-        contentType = null,
-        bytes = null;
+  _PendingImage.url(String this.url) : file = null;
 
-  final String? fileName;
-  final String? contentType;
-  final Uint8List? bytes;
+  final PickedImage? file;
   final String? url;
 
-  String get label => fileName ?? url!;
+  String get label => file?.fileName ?? url!;
 }
 
 class _DestinationFormScreenState extends State<DestinationFormScreen> {
   static const _maxNameLength = 200;
   static const _maxDescriptionLength = 2000;
-  static const _maxImageBytes = 5 * 1024 * 1024;
   static const _referencePageSize = 100;
-
-  static const _contentTypes = {
-    'jpg': 'image/jpeg',
-    'jpeg': 'image/jpeg',
-    'png': 'image/png',
-    'gif': 'image/gif',
-    'webp': 'image/webp',
-    'bmp': 'image/bmp',
-  };
 
   final _formKey = GlobalKey<FormBuilderState>();
 
@@ -189,40 +168,14 @@ class _DestinationFormScreenState extends State<DestinationFormScreen> {
             ? 'Izmjene destinacije "${saved.name}" su sačuvane.'
             : 'Destinacija "${saved.name}" je dodana.',
       );
-    } on ApiClientException catch (e) {
-      if (mounted) {
-        _showServerErrors(e);
-      }
     } on Exception catch (e) {
       if (mounted) {
-        await showErrorDialog(context, e);
+        showFormErrors(context, _formKey.currentState, e);
       }
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
       }
-    }
-  }
-
-  /// Field errors go under their control; anything else is shown in a dialog.
-  void _showServerErrors(ApiClientException error) {
-    final fields = _formKey.currentState!.fields;
-    final unmatched = <String>[];
-
-    error.fieldErrors.forEach((key, messages) {
-      final field = fields[key];
-      if (field != null) {
-        field.invalidate(messages.join(' '));
-      } else {
-        unmatched.addAll(messages);
-      }
-    });
-
-    if (error.fieldErrors.isEmpty || unmatched.isNotEmpty) {
-      showErrorDialog(
-        context,
-        unmatched.isEmpty ? error.message : unmatched.join('\n'),
-      );
     }
   }
 
@@ -236,11 +189,12 @@ class _DestinationFormScreenState extends State<DestinationFormScreen> {
         if (image.url != null) {
           await imageProvider.addFromUrl(destinationId, image.url!);
         } else {
+          final file = image.file!;
           await imageProvider.upload(
             destinationId,
-            fileName: image.fileName!,
-            contentType: image.contentType!,
-            base64Content: base64Encode(image.bytes!),
+            fileName: file.fileName,
+            contentType: file.contentType,
+            base64Content: file.base64Content,
           );
         }
       } on Exception catch (e) {
@@ -252,47 +206,22 @@ class _DestinationFormScreenState extends State<DestinationFormScreen> {
 
   Future<void> _pickImageFiles() async {
     setState(() => _imageError = null);
-    final result = await FilePicker.pickFiles(
-      allowMultiple: true,
-      type: FileType.image,
-    );
-    if (result == null) {
+    final picked = await pickImageFiles();
+    if (!mounted) {
       return;
     }
-
-    final rejected = <String>[];
-    for (final file in result.files) {
-      final extension = file.extension?.toLowerCase() ?? '';
-      final contentType = _contentTypes[extension];
-      if (contentType == null) {
-        rejected.add('${file.name}: format nije podržan (JPG, PNG, GIF, WEBP, BMP).');
-        continue;
-      }
-      if (file.size > _maxImageBytes) {
-        rejected.add('${file.name}: slika je veća od 5 MB.');
-        continue;
-      }
-
-      final bytes = await file.xFile.readAsBytes();
-      _pendingImages.add(
-        _PendingImage.file(
-          fileName: file.name,
-          contentType: contentType,
-          bytes: bytes,
-        ),
-      );
-    }
-
-    if (mounted) {
-      setState(() => _imageError = rejected.isEmpty ? null : rejected.join('\n'));
-    }
+    setState(() {
+      _pendingImages.addAll(picked.images.map(_PendingImage.file));
+      _imageError =
+          picked.rejected.isEmpty ? null : picked.rejected.join('\n');
+    });
   }
 
   Future<void> _addImageUrl() async {
     setState(() => _imageError = null);
     final url = await showDialog<String>(
       context: context,
-      builder: (context) => const _ImageUrlDialog(),
+      builder: (context) => const ImageUrlDialog(),
     );
     if (url != null && mounted) {
       setState(() => _pendingImages.add(_PendingImage.url(url)));
@@ -618,11 +547,11 @@ class _DestinationFormScreenState extends State<DestinationFormScreen> {
                 ),
               for (final image in _pendingImages)
                 _ImageTile(
-                  preview: image.bytes != null
+                  preview: image.file != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(6),
                           child: Image.memory(
-                            image.bytes!,
+                            image.file!.bytes,
                             width: _ImageTile.width,
                             height: _ImageTile.height,
                             fit: BoxFit.cover,
@@ -727,60 +656,6 @@ class _ImageTile extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ImageUrlDialog extends StatefulWidget {
-  const _ImageUrlDialog();
-
-  @override
-  State<_ImageUrlDialog> createState() => _ImageUrlDialogState();
-}
-
-class _ImageUrlDialogState extends State<_ImageUrlDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _controller = TextEditingController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    if (_formKey.currentState!.validate()) {
-      Navigator.pop(context, _controller.text.trim());
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Dodaj sliku preko URL-a'),
-      content: SizedBox(
-        width: 480,
-        child: Form(
-          key: _formKey,
-          child: TextFormField(
-            controller: _controller,
-            autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'URL slike *',
-              hintText: 'https://primjer.com/slika.jpg',
-            ),
-            validator: Validators.imageUrl,
-            onFieldSubmitted: (_) => _submit(),
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Odustani'),
-        ),
-        FilledButton(onPressed: _submit, child: const Text('Dodaj')),
-      ],
     );
   }
 }

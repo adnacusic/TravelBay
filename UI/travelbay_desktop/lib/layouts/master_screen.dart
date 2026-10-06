@@ -9,6 +9,7 @@ import '../screens/login_screen.dart';
 import '../screens/news/news_list_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/reference_data/reference_data_screen.dart';
+import '../screens/reports/report_screen.dart';
 import '../screens/reviews/review_list_screen.dart';
 import '../screens/users/user_list_screen.dart';
 import '../utils/app_navigator.dart';
@@ -44,8 +45,6 @@ class _MenuEntry {
   final Widget Function()? builder;
   final String? unavailableReason;
 }
-
-const _reportsComingSoon = 'Uskoro: PDF izvještaji su u izradi.';
 
 final _menu = <_MenuEntry>[
   _MenuEntry(
@@ -90,11 +89,11 @@ final _menu = <_MenuEntry>[
     Icons.newspaper_outlined,
     builder: () => const NewsListScreen(),
   ),
-  const _MenuEntry(
+  _MenuEntry(
     AdminSection.reports,
     'Izvještaji',
     Icons.picture_as_pdf_outlined,
-    unavailableReason: _reportsComingSoon,
+    builder: () => const ReportScreen(),
   ),
   const _MenuEntry(
     AdminSection.aiAgents,

@@ -1,13 +1,9 @@
 import '../models/dashboard_stats.dart';
-import 'base_provider.dart';
+import 'api_provider.dart';
 
-class DashboardProvider extends BaseProvider<DashboardStats> {
+class DashboardProvider extends ApiProvider {
   DashboardProvider() : super('Dashboard');
 
-  @override
-  DashboardStats fromJson(Map<String, dynamic> json) =>
-      DashboardStats.fromJson(json);
-
   Future<DashboardStats> getStats() async =>
-      fromJson(await getJson('$endpoint/Stats'));
+      DashboardStats.fromJson(await getJson('$endpoint/Stats'));
 }

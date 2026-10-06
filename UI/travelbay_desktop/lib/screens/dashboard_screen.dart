@@ -7,6 +7,7 @@ import '../providers/dashboard_provider.dart';
 import '../utils/app_navigator.dart';
 import '../utils/dialogs.dart';
 import '../utils/formatters.dart';
+import '../widgets/scrollable_table.dart';
 import '../widgets/stat_card.dart';
 import '../widgets/status_chip.dart';
 import 'destinations/destination_form_screen.dart';
@@ -146,8 +147,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Text('Još nema dodanih destinacija.'),
               )
             else
-              SizedBox(
-                width: double.infinity,
+              ScrollableTable(
                 child: DataTable(
                   showCheckboxColumn: false,
                   columns: const [

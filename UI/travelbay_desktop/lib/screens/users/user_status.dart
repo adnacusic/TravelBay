@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/user.dart';
 import '../../providers/user_provider.dart';
 import '../../utils/dialogs.dart';
+import '../../utils/jwt_claims.dart';
 import '../../widgets/tone_chip.dart';
 
 class UserStatusChip extends StatelessWidget {
@@ -60,3 +61,9 @@ Future<User?> toggleUserActive(BuildContext context, User user) async {
     return null;
   }
 }
+
+String roleLabel(String? role) => switch (role) {
+      RoleNames.admin => 'Administrator',
+      RoleNames.user => 'Korisnik',
+      _ => '-',
+    };

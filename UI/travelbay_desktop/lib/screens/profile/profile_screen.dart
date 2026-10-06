@@ -10,7 +10,7 @@ import '../../utils/dialogs.dart';
 import '../../utils/form_errors.dart';
 import '../../utils/formatters.dart';
 import '../../utils/validators.dart';
-import '../users/user_list_screen.dart';
+import '../users/user_status.dart';
 
 /// The signed-in admin edits their own data (Users/Me) and changes their password.
 class ProfileScreen extends StatefulWidget {

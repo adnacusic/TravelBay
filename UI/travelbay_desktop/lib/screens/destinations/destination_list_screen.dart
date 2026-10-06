@@ -12,6 +12,7 @@ import '../../utils/dialogs.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/network_thumbnail.dart';
 import '../../widgets/pagination_bar.dart';
+import '../../widgets/scrollable_table.dart';
 import '../../widgets/search_field.dart';
 import '../../widgets/status_chip.dart';
 import 'destination_form_screen.dart';
@@ -254,8 +255,7 @@ class _DestinationListScreenState extends State<DestinationListScreen> {
       child: Stack(
         children: [
           SingleChildScrollView(
-            child: SizedBox(
-              width: double.infinity,
+            child: ScrollableTable(
               child: DataTable(
                 showCheckboxColumn: false,
                 dataRowMinHeight: 64,

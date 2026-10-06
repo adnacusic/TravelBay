@@ -8,6 +8,7 @@ import '../../providers/city_provider.dart';
 import '../../providers/country_provider.dart';
 import '../../utils/dialogs.dart';
 import '../../widgets/pagination_bar.dart';
+import '../../widgets/scrollable_table.dart';
 import '../../widgets/search_field.dart';
 import 'city_form_dialog.dart';
 import 'country_form_dialog.dart';
@@ -420,7 +421,7 @@ class _Panel extends StatelessWidget {
               child: isEmpty && !isLoading
                   ? Center(child: Text(emptyText))
                   : SingleChildScrollView(
-                      child: SizedBox(width: double.infinity, child: table),
+                      child: ScrollableTable(child: table),
                     ),
             ),
             pagination,

@@ -10,7 +10,6 @@ import '../../utils/dialogs.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/stat_card.dart';
 import 'reset_password_dialog.dart';
-import 'user_list_screen.dart';
 import 'user_status.dart';
 
 /// Read-only profile and activity of one user, with account actions.

@@ -8,13 +8,12 @@ import '../../providers/auth_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../utils/app_navigator.dart';
 import '../../utils/dialogs.dart';
-import '../../utils/formatters.dart';
-import '../../utils/jwt_claims.dart';
 import '../../widgets/pagination_bar.dart';
 import '../../widgets/search_field.dart';
 import '../../widgets/stat_card.dart';
 import 'user_details_screen.dart';
 import 'user_status.dart';
+import 'user_table.dart';
 
 class UserListScreen extends StatefulWidget {
   const UserListScreen({super.key});
@@ -234,56 +233,16 @@ class _UserListScreenState extends State<UserListScreen> {
       );
     }
 
-    final currentUserId = context.read<AuthProvider>().currentUserId;
-
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
           SingleChildScrollView(
-            child: SizedBox(
-              width: double.infinity,
-              child: DataTable(
-                showCheckboxColumn: false,
-                columns: const [
-                  DataColumn(label: Text('Ime i prezime')),
-                  DataColumn(label: Text('Korisničko ime')),
-                  DataColumn(label: Text('Email')),
-                  DataColumn(label: Text('Uloga')),
-                  DataColumn(label: Text('Registrovan')),
-                  DataColumn(label: Text('Zadnja prijava')),
-                  DataColumn(label: Text('Status')),
-                  DataColumn(label: Text('Akcije')),
-                ],
-                rows: [
-                  for (final user in _users)
-                    DataRow(
-                      onSelectChanged: (_) => _openDetails(user),
-                      cells: [
-                        DataCell(Text(user.fullName)),
-                        DataCell(Text(user.username)),
-                        DataCell(Text(user.email)),
-                        DataCell(Text(roleLabel(user.role))),
-                        DataCell(Text(formatDate(user.createdAt))),
-                        DataCell(Text(formatDateTime(user.lastLoginAt))),
-                        DataCell(UserStatusChip(isActive: user.isActive)),
-                        DataCell(
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                tooltip: 'Detalji',
-                                icon: const Icon(Icons.visibility_outlined),
-                                onPressed: () => _openDetails(user),
-                              ),
-                              _buildToggleButton(user, isSelf: user.id == currentUserId),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
+            child: UserTable(
+              users: _users,
+              currentUserId: context.read<AuthProvider>().currentUserId,
+              onOpenDetails: _openDetails,
+              onToggleActive: _toggleActive,
             ),
           ),
           if (_isLoading) const LinearProgressIndicator(),
@@ -291,31 +250,4 @@ class _UserListScreenState extends State<UserListScreen> {
       ),
     );
   }
-
-  Widget _buildToggleButton(User user, {required bool isSelf}) {
-    if (user.isActive) {
-      final disabled = isSelf;
-      return Tooltip(
-        message: disabled ? selfDeactivationReason : 'Deaktiviraj račun',
-        child: IconButton(
-          icon: Icon(
-            Icons.person_off_outlined,
-            color: disabled ? null : Theme.of(context).colorScheme.error,
-          ),
-          onPressed: disabled ? null : () => _toggleActive(user),
-        ),
-      );
-    }
-    return IconButton(
-      tooltip: 'Aktiviraj račun',
-      icon: const Icon(Icons.person_add_alt_1_outlined),
-      onPressed: () => _toggleActive(user),
-    );
-  }
 }
-
-String roleLabel(String? role) => switch (role) {
-      RoleNames.admin => 'Administrator',
-      RoleNames.user => 'Korisnik',
-      _ => '-',
-    };

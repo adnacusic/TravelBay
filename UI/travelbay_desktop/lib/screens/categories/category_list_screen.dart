@@ -8,6 +8,7 @@ import '../../utils/category_icons.dart';
 import '../../utils/dialogs.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/pagination_bar.dart';
+import '../../widgets/scrollable_table.dart';
 import '../../widgets/search_field.dart';
 import '../../widgets/tone_chip.dart';
 import 'category_form_dialog.dart';
@@ -157,8 +158,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
       child: Stack(
         children: [
           SingleChildScrollView(
-            child: SizedBox(
-              width: double.infinity,
+            child: ScrollableTable(
               child: DataTable(
                 showCheckboxColumn: false,
                 columns: const [

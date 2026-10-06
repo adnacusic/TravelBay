@@ -14,6 +14,7 @@ import '../../utils/formatters.dart';
 import '../../widgets/pagination_bar.dart';
 import 'reject_review_dialog.dart';
 import 'review_widgets.dart';
+import '../../widgets/scrollable_table.dart';
 
 /// Review moderation. Status only changes through the API state machine
 /// (Pending -> Approved / Rejected); the actions are offered only for pending reviews.
@@ -351,8 +352,7 @@ class _ReviewListScreenState extends State<ReviewListScreen> {
       child: Stack(
         children: [
           SingleChildScrollView(
-            child: SizedBox(
-              width: double.infinity,
+            child: ScrollableTable(
               child: DataTable(
                 showCheckboxColumn: false,
                 columns: const [

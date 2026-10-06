@@ -4,6 +4,7 @@ using TravelBay.Model.Responses;
 using TravelBay.Services;
 using TravelBay.Services.Database;
 using TravelBay.Services.Hubs;
+using TravelBay.Services.Reports;
 using TravelBay.Services.Validators;
 using TravelBay.WebAPI.Filters;
 using TravelBay.WebAPI.Services;
@@ -29,6 +30,9 @@ catch (FileNotFoundException)
 }
 
 var builder = WebApplication.CreateBuilder(args);
+
+// PDF reports (QuestPDF) - free Community license, valid for this non-commercial project.
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 // Add services to the container.
 
@@ -126,6 +130,7 @@ builder.Services.AddScoped<IViewHistoryService, ViewHistoryService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IReportService, ReportService>();
 
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IRecommendationService, RecommendationService>();

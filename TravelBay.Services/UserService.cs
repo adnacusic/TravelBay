@@ -7,6 +7,7 @@ using TravelBay.Model.Responses;
 using TravelBay.Model.SearchObjects;
 using TravelBay.Services.Database;
 using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
@@ -200,7 +201,7 @@ namespace TravelBay.Services
         {
             if (!isActive && id == currentUserId)
             {
-                throw new ClientException("You cannot deactivate your own account.");
+                throw new ClientException("Ne možete deaktivirati vlastiti račun.");
             }
 
             var entity = await _dbContext.Users.FindAsync(id)
@@ -338,7 +339,7 @@ namespace TravelBay.Services
 
             if (!_cryptoService.Verify(user.PasswordHash, user.PasswordSalt, request.Password))
             {
-                throw new ClientException("Current password is incorrect.");
+                throw FieldError(nameof(request.Password), "Trenutna lozinka nije ispravna.");
             }
 
             user.PasswordSalt = _cryptoService.GenerateSlat();
@@ -367,13 +368,17 @@ namespace TravelBay.Services
         {
             if (email != null && await _dbContext.Users.AnyAsync(u => u.Email == email && u.Id != exceptUserId))
             {
-                throw new ClientException($"Email '{email}' is already in use.");
+                throw FieldError(nameof(UserInsertRequest.Email), $"Email '{email}' već koristi drugi korisnik.");
             }
 
             if (username != null && await _dbContext.Users.AnyAsync(u => u.Username == username && u.Id != exceptUserId))
             {
-                throw new ClientException($"Username '{username}' is already in use.");
+                throw FieldError(nameof(UserInsertRequest.Username), $"Korisničko ime '{username}' je zauzeto.");
             }
         }
+
+        /// <summary>A rule that needs the database, reported like a validation error so clients show it under the field.</summary>
+        private static ValidationException FieldError(string propertyName, string message) =>
+            new(new[] { new ValidationFailure(propertyName, message) });
     }
 }

@@ -5,6 +5,7 @@ using TravelBay.Model.Responses;
 using TravelBay.Model.SearchObjects;
 using TravelBay.Services.Database;
 using FluentValidation;
+using Mapster;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
 
@@ -49,7 +50,8 @@ public class CollectionService
 
     protected override Task<IQueryable<Collection>> IncludeRelatedEntitiesAsync(CollectionSearchObject? search, IQueryable<Collection> query)
     {
-        return base.IncludeRelatedEntitiesAsync(search, query.Include(c => c.Items));
+        return base.IncludeRelatedEntitiesAsync(search, query.Include(c => c.Items).ThenInclude(i => i.Destination).ThenInclude(d => d.City)
+            .Include(c => c.Items).ThenInclude(i => i.Destination).ThenInclude(d => d.Images));
     }
 
     public override async Task<CollectionResponse> GetByIdAsync(int id)
@@ -99,10 +101,9 @@ public class CollectionService
 
         return await _dbContext.CollectionItems
             .AsNoTracking()
-            .Include(i => i.Destination)
             .Where(i => i.CollectionId == collectionId)
             .OrderByDescending(i => i.AddedAt)
-            .Select(i => MapItemToResponse(i))
+            .ProjectToType<CollectionItemResponse>()
             .ToListAsync();
     }
 
@@ -133,8 +134,11 @@ public class CollectionService
         _dbContext.CollectionItems.Add(item);
         await _dbContext.SaveChangesAsync();
 
-        var loaded = await _dbContext.CollectionItems.Include(i => i.Destination).FirstAsync(i => i.Id == item.Id);
-        return MapItemToResponse(loaded);
+        return await _dbContext.CollectionItems
+            .AsNoTracking()
+            .Where(i => i.Id == item.Id)
+            .ProjectToType<CollectionItemResponse>()
+            .FirstAsync();
     }
 
     public async Task RemoveItemAsync(int collectionId, int itemId)
@@ -157,7 +161,8 @@ public class CollectionService
         IQueryable<Collection> query = _dbContext.Collections;
         if (includeItems)
         {
-            query = query.Include(c => c.Items).ThenInclude(i => i.Destination);
+            query = query.Include(c => c.Items).ThenInclude(i => i.Destination).ThenInclude(d => d.City)
+                .Include(c => c.Items).ThenInclude(i => i.Destination).ThenInclude(d => d.Images);
         }
 
         var entity = await query.FirstOrDefaultAsync(c => c.Id == collectionId);
@@ -169,20 +174,5 @@ public class CollectionService
         return entity;
     }
 
-    private static CollectionResponse MapToResponse(Collection entity) => new()
-    {
-        Id = entity.Id,
-        UserId = entity.UserId,
-        Name = entity.Name,
-        CreatedAt = entity.CreatedAt,
-        Items = entity.Items?.Select(MapItemToResponse).ToList() ?? new List<CollectionItemResponse>()
-    };
-
-    private static CollectionItemResponse MapItemToResponse(CollectionItem item) => new()
-    {
-        Id = item.Id,
-        DestinationId = item.DestinationId,
-        DestinationName = item.Destination?.Name ?? string.Empty,
-        AddedAt = item.AddedAt
-    };
+    private CollectionResponse MapToResponse(Collection entity) => _mapper.Map<CollectionResponse>(entity);
 }

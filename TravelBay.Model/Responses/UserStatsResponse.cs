@@ -20,6 +20,7 @@ namespace TravelBay.Model.Responses
         public int ApprovedReviewCount { get; set; }
         public int RejectedReviewCount { get; set; }
         public int TripPlanCount { get; set; }
+        public int CompletedTripPlanCount { get; set; }
         public int CollectionCount { get; set; }
         public int SavedDestinationCount { get; set; }
         public int ViewCount { get; set; }

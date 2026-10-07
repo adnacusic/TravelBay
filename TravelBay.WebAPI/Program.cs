@@ -94,6 +94,14 @@ TypeAdapterConfig<Review, ReviewResponse>.NewConfig()
         src => src.ModeratedByUser != null ? $"{src.ModeratedByUser.FirstName} {src.ModeratedByUser.LastName}".Trim() : null);
 TypeAdapterConfig<City, CityResponse>.NewConfig()
     .Map(dest => dest.CountryName, src => src.Country.Name);
+TypeAdapterConfig<Collection, CollectionResponse>.NewConfig()
+    .Map(dest => dest.Items, src => src.Items.OrderByDescending(i => i.AddedAt));
+TypeAdapterConfig<CollectionItem, CollectionItemResponse>.NewConfig()
+    .Map(dest => dest.DestinationName, src => src.Destination != null ? src.Destination.Name : string.Empty)
+    .Map(dest => dest.CityName, src => src.Destination != null && src.Destination.City != null ? src.Destination.City.Name : string.Empty)
+    .Map(dest => dest.ImageUrl, src => src.Destination != null
+        ? src.Destination.Images.OrderBy(i => i.OrderIndex).Select(i => i.ImageUrl).FirstOrDefault()
+        : null);
 
 
 // register application services
@@ -151,6 +159,7 @@ builder.Services.AddScoped<IValidator<UserUpdateRequest>, UserUpdateValidator>()
 builder.Services.AddScoped<IValidator<UserProfileUpdateRequest>, UserProfileUpdateValidator>();
 builder.Services.AddScoped<IValidator<UserPasswordChangeRequest>, UserPasswordChangeValidator>();
 builder.Services.AddScoped<IValidator<UserPasswordResetRequest>, UserPasswordResetValidator>();
+builder.Services.AddScoped<IValidator<UserProfileImageRequest>, UserProfileImageValidator>();
 builder.Services.AddScoped<IValidator<AssetInsertRequest>, AssetInsertValidator>();
 builder.Services.AddScoped<IValidator<AssetUpdateRequest>, AssetUpdateValidator>();
 builder.Services.AddScoped<IValidator<ReviewInsertRequest>, ReviewInsertValidator>();

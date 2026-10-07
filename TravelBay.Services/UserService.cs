@@ -23,6 +23,7 @@ namespace TravelBay.Services
         private readonly IValidator<UserProfileUpdateRequest> _profileValidator;
         private readonly IValidator<UserPasswordChangeRequest> _passwordChangeValidator;
         private readonly IValidator<UserPasswordResetRequest> _passwordResetValidator;
+        private readonly IValidator<UserProfileImageRequest> _profileImageValidator;
 
         public UserService(
             TravelBayDbContext dbContext,
@@ -32,12 +33,14 @@ namespace TravelBay.Services
             IValidator<UserProfileUpdateRequest> profileValidator,
             IValidator<UserPasswordChangeRequest> passwordChangeValidator,
             IValidator<UserPasswordResetRequest> passwordResetValidator,
+            IValidator<UserProfileImageRequest> profileImageValidator,
             ICryptoService cryptoService)
             : base(dbContext, mapper, insertValidator, updateValidator)
         {
             _cryptoService = cryptoService;
             _profileValidator = profileValidator;
             _passwordChangeValidator = passwordChangeValidator;
+            _profileImageValidator = profileImageValidator;
             _passwordResetValidator = passwordResetValidator;
         }
 
@@ -273,10 +276,62 @@ namespace TravelBay.Services
                 ApprovedReviewCount = ReviewsWith(ReviewStatus.Approved),
                 RejectedReviewCount = ReviewsWith(ReviewStatus.Rejected),
                 TripPlanCount = await _dbContext.TripPlans.CountAsync(t => t.UserId == id),
+                CompletedTripPlanCount = await _dbContext.TripPlans.CountAsync(t => t.UserId == id && t.Status == TripPlanStatus.Completed),
                 CollectionCount = await _dbContext.Collections.CountAsync(c => c.UserId == id),
                 SavedDestinationCount = await _dbContext.SavedDestinations.CountAsync(s => s.UserId == id),
                 ViewCount = await _dbContext.ViewHistories.CountAsync(v => v.UserId == id)
             };
+        }
+
+        public async Task<UserResponse> SetProfileImageAsync(int userId, UserProfileImageRequest request)
+        {
+            await _profileImageValidator.ValidateAndThrowAsync(request);
+
+            var entity = await _dbContext.Users.Include(u => u.ProfileImage).FirstOrDefaultAsync(u => u.Id == userId)
+                ?? throw new NotFoundException($"User with id {userId} not found.");
+
+            var previous = entity.ProfileImage;
+            entity.ProfileImage = new Asset
+            {
+                FileName = request.FileName.Trim(),
+                ContentType = request.ContentType,
+                Base64Content = request.Base64Content,
+                CreatedAt = DateTime.UtcNow
+            };
+            if (previous != null)
+            {
+                _dbContext.Assets.Remove(previous);
+            }
+
+            await _dbContext.SaveChangesAsync();
+            return await GetByIdAsync(userId);
+        }
+
+        public async Task<UserResponse> RemoveProfileImageAsync(int userId)
+        {
+            var entity = await _dbContext.Users.Include(u => u.ProfileImage).FirstOrDefaultAsync(u => u.Id == userId)
+                ?? throw new NotFoundException($"User with id {userId} not found.");
+
+            if (entity.ProfileImage != null)
+            {
+                _dbContext.Assets.Remove(entity.ProfileImage);
+                entity.ProfileImageId = null;
+                await _dbContext.SaveChangesAsync();
+            }
+
+            return await GetByIdAsync(userId);
+        }
+
+        public async Task<(byte[] Content, string ContentType)> GetProfileImageAsync(int userId)
+        {
+            var image = await _dbContext.Users
+                .AsNoTracking()
+                .Where(u => u.Id == userId && u.ProfileImageId != null)
+                .Select(u => new { u.ProfileImage!.Base64Content, u.ProfileImage.ContentType })
+                .FirstOrDefaultAsync()
+                ?? throw new NotFoundException("Profile image not found.");
+
+            return (Convert.FromBase64String(image.Base64Content), image.ContentType);
         }
 
         public async Task RecordLoginAsync(int userId)

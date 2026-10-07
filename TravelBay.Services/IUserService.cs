@@ -21,6 +21,13 @@ namespace TravelBay.Services
 
         Task RecordLoginAsync(int userId);
 
+        /// <summary>Replaces the profile picture; the previous Asset is removed.</summary>
+        Task<UserResponse> SetProfileImageAsync(int userId, UserProfileImageRequest request);
+
+        Task<UserResponse> RemoveProfileImageAsync(int userId);
+
+        Task<(byte[] Content, string ContentType)> GetProfileImageAsync(int userId);
+
         /// <summary>Current-user self-service change; verifies the old password first.</summary>
         Task ChangePasswordAsync(int userId, UserPasswordChangeRequest request);
 

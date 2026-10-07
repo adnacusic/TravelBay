@@ -50,6 +50,8 @@ public class SavedDestinationService : ISavedDestinationService
                 Id = sd.Id,
                 DestinationId = sd.DestinationId,
                 DestinationName = sd.Destination.Name,
+                CityName = sd.Destination.City.Name,
+                ImageUrl = sd.Destination.Images.OrderBy(i => i.OrderIndex).Select(i => i.ImageUrl).FirstOrDefault(),
                 SavedAt = sd.SavedAt
             })
             .ToListAsync();
@@ -61,7 +63,10 @@ public class SavedDestinationService : ISavedDestinationService
     {
         var userId = CurrentUserId();
 
-        var destination = await _dbContext.Destinations.FirstOrDefaultAsync(d => d.Id == request.DestinationId)
+        var destination = await _dbContext.Destinations
+            .Include(d => d.City)
+            .Include(d => d.Images)
+            .FirstOrDefaultAsync(d => d.Id == request.DestinationId)
             ?? throw new ClientException("Destination not found.");
 
         var alreadySaved = await _dbContext.SavedDestinations
@@ -86,6 +91,8 @@ public class SavedDestinationService : ISavedDestinationService
             Id = entity.Id,
             DestinationId = entity.DestinationId,
             DestinationName = destination.Name,
+            CityName = destination.City.Name,
+            ImageUrl = destination.Images.OrderBy(i => i.OrderIndex).Select(i => i.ImageUrl).FirstOrDefault(),
             SavedAt = entity.SavedAt
         };
     }

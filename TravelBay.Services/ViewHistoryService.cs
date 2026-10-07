@@ -54,7 +54,6 @@ public class ViewHistoryService : IViewHistoryService
 
         IQueryable<ViewHistory> query = _dbContext.ViewHistories
             .AsNoTracking()
-            .Include(vh => vh.Destination)
             .Where(vh => vh.UserId == userId)
             .OrderByDescending(vh => vh.ViewedAt);
 
@@ -75,6 +74,8 @@ public class ViewHistoryService : IViewHistoryService
                 Id = vh.Id,
                 DestinationId = vh.DestinationId,
                 DestinationName = vh.Destination.Name,
+                CityName = vh.Destination.City.Name,
+                ImageUrl = vh.Destination.Images.OrderBy(i => i.OrderIndex).Select(i => i.ImageUrl).FirstOrDefault(),
                 ViewedAt = vh.ViewedAt
             })
             .ToListAsync();

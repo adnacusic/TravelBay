@@ -88,6 +88,24 @@ public class UsersController : BaseCRUDController<UserResponse, UserSearch, User
         return Ok(result);
     }
 
+    [HttpGet("Me/Activity")]
+    public async Task<ActionResult<UserActivityResponse>> GetMyActivity() => Ok(await _service.GetActivityAsync(CurrentUserId()));
+
+    [HttpGet("Me/ProfileImage")]
+    public async Task<IActionResult> GetMyProfileImage()
+    {
+        var (content, contentType) = await _service.GetProfileImageAsync(CurrentUserId());
+        return File(content, contentType);
+    }
+
+    [HttpPut("Me/ProfileImage")]
+    public async Task<ActionResult<UserResponse>> SetMyProfileImage([FromBody] UserProfileImageRequest request) =>
+        Ok(await _service.SetProfileImageAsync(CurrentUserId(), request));
+
+    [HttpDelete("Me/ProfileImage")]
+    public async Task<ActionResult<UserResponse>> RemoveMyProfileImage() =>
+        Ok(await _service.RemoveProfileImageAsync(CurrentUserId()));
+
     [HttpPut("Me/ChangePassword")]
     public async Task<IActionResult> ChangePassword([FromBody] UserPasswordChangeRequest request)
     {

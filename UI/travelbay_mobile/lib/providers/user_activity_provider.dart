@@ -10,6 +10,26 @@ import 'api_provider.dart';
 class SavedDestinationProvider extends ApiProvider {
   SavedDestinationProvider() : super('SavedDestinations');
 
+  Future<SearchResult<SavedDestination>> get({int page = 1, int pageSize = 20}) async {
+    final data = await getJson(
+      endpoint,
+      {'page': page, 'pageSize': pageSize, 'includeTotalCount': true},
+    );
+    return SearchResult(
+      items: (data['items'] as List)
+          .map((e) => SavedDestination.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      totalCount: data['totalCount'] as int?,
+    );
+  }
+
+  /// The saved entry for one destination, or null when it is not saved.
+  Future<SavedDestination?> findFor(int destinationId) async {
+    final data = await getJson(endpoint, {'destinationId': destinationId, 'pageSize': 1});
+    final items = data['items'] as List;
+    return items.isEmpty ? null : SavedDestination.fromJson(items.first as Map<String, dynamic>);
+  }
+
   Future<SavedDestination> save(int destinationId) async => SavedDestination.fromJson(
         (await sendAction('POST', endpoint, {'destinationId': destinationId}))!,
       );

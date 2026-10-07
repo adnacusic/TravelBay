@@ -43,7 +43,7 @@ public class ReviewStateMachine : IReviewStateMachine
 
         await _auditLogService.LogAsync(nameof(Review), review.Id, "Approved", adminId, null);
         await _notificationService.CreateAsync(
-            review.UserId, "Recenzija odobrena", "Vaša recenzija je odobrena i sada je javno vidljiva.", NotificationType.ReviewApproved);
+            review.UserId, "Recenzija odobrena", $"Vaša recenzija destinacije {review.Destination.Name} je odobrena i sada je javno vidljiva.", NotificationType.ReviewApproved);
 
         return _mapper.Map<ReviewResponse>(review);
     }
@@ -66,7 +66,7 @@ public class ReviewStateMachine : IReviewStateMachine
 
         await _auditLogService.LogAsync(nameof(Review), review.Id, "Rejected", adminId, review.ModerationReason);
         await _notificationService.CreateAsync(
-            review.UserId, "Recenzija odbijena", $"Razlog: {review.ModerationReason}", NotificationType.ReviewRejected);
+            review.UserId, "Recenzija odbijena", $"Vaša recenzija destinacije {review.Destination.Name} nije objavljena. Razlog: {review.ModerationReason}", NotificationType.ReviewRejected);
 
         return _mapper.Map<ReviewResponse>(review);
     }

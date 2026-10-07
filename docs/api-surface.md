@@ -34,7 +34,11 @@
 | GET | `/Users` | Admin | Admin-nad-drugima | Lista svih korisnika, paginirano, filter po Email/Username/Name/IsActive |
 | GET | `/Users/{id}` | Admin | Admin-nad-drugima | Detalj bilo kojeg korisnika |
 | GET | `/Users/Me` | Auth | Current-user | Vlastiti profil |
-| PUT | `/Users/Me` | Auth | Current-user | Izmjena vlastitog profila (ime, telefon, slika) — BEZ lozinke |
+| PUT | `/Users/Me` | Auth | Current-user | Izmjena vlastitog profila (ime, prezime, email, korisničko ime, telefon) — BEZ lozinke i slike |
+| GET | `/Users/Me/Activity` | Auth | Current-user | Brojači za profil (recenzije po statusu, planovi, završeni planovi, kolekcije, sačuvano, pregledi) |
+| GET | `/Users/Me/ProfileImage` | Auth | Current-user | Sadržaj slike profila (404 ako je nema) |
+| PUT | `/Users/Me/ProfileImage` | Auth | Current-user | Nova slika profila (base64, samo `image/*`, max 5 MB); stari Asset se briše |
+| DELETE | `/Users/Me/ProfileImage` | Auth | Current-user | Uklanja sliku profila i njen Asset |
 | PUT | `/Users/{id}` | Admin | Admin-nad-drugima | Admin izmjena tuđeg profila |
 | DELETE | `/Users/{id}` | Admin | Admin-nad-drugima | Deaktivacija (`IsActive=false`), NE hard delete |
 | PUT | `/Users/Me/ChangePassword` | Auth | Current-user | Mijenja vlastitu lozinku — potvrđuje staru |
@@ -43,7 +47,7 @@
 ### AssetsController — `/Assets`
 | Metoda | Ruta | Auth | Opis |
 |---|---|---|---|
-| POST | `/Assets` | Auth | Upload blob-a (npr. profilna slika prije PUT `/Users/Me`) |
+| POST | `/Assets` | Auth | Upload blob-a (slika profila ide kroz `PUT /Users/Me/ProfileImage`) |
 | GET | `/Assets` | Admin | Pregled svih (debug/admin) |
 | GET | `/Assets/{id}` | Auth | Detalj |
 | PUT | `/Assets/{id}` | Auth | Izmjena |
@@ -127,7 +131,7 @@
 ### SavedDestinationsController — `/SavedDestinations` (NOVO)
 | Metoda | Ruta | Auth | Opis |
 |---|---|---|---|
-| GET | `/SavedDestinations` | Auth | Current-user: lista sačuvanih destinacija |
+| GET | `/SavedDestinations` | Auth | Current-user: lista sačuvanih destinacija, paginirano, filter `DestinationId`; svaka stavka nosi `CityName` i naslovnu `ImageUrl` |
 | POST | `/SavedDestinations` | Auth | Sačuvaj (`DestinationId`); 409 ako je već sačuvana (unique) |
 | DELETE | `/SavedDestinations/{id}` | Auth | Ukloni iz sačuvanih (vlasništvo) |
 
@@ -141,7 +145,7 @@
 | Metoda | Ruta | Auth | Opis |
 |---|---|---|---|
 | POST | `/ViewHistories` | Auth | Current-user: zapiši pregled destinacije (koristi Faza 3 recommender) |
-| GET | `/ViewHistories` | Auth | Current-user: vlastita historija, paginirano |
+| GET | `/ViewHistories` | Auth | Current-user: vlastita historija, paginirano (sa `CityName` i naslovnom `ImageUrl`) |
 
 ### NotificationsController — `/Notifications` (NOVO)
 | Metoda | Ruta | Auth | Opis |

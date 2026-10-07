@@ -1,17 +1,25 @@
-# ecommerce_mobile
+# TravelBay — korisnička mobilna aplikacija (Flutter, Android)
 
-A new Flutter project.
+Aplikacija za korisnike (rola `User`): preporuke, pretraga destinacija, planovi putovanja,
+sačuvane destinacije i kolekcije, profil i notifikacije.
 
-## Getting Started
+## Pokretanje
 
-This project is a starting point for a Flutter application.
+Preduslovi: Flutter SDK s Android toolchainom, pokrenut Android emulator (AVD) i API
+(`docker compose up -d` u korijenu repozitorija).
 
-A few resources to get you started if this is your first Flutter project:
+```
+flutter pub get
+flutter run --dart-define=baseUrl=http://10.0.2.2:8080/
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+`10.0.2.2` je adresa računara gledano iz Android emulatora (`localhost` bi bio sam emulator).
+`baseUrl` se zadaje isključivo preko `--dart-define`; bez njega se koristi `http://10.0.2.2:8080/`.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Struktura
+
+- `lib/models` — DTO modeli (`json_serializable`; nakon izmjene: `dart run build_runner build`)
+- `lib/providers` — `ApiProvider` (Bearer token, obnavljanje tokena, poruke grešaka),
+  `BaseProvider<T>` (paginirani CRUD) i provideri po resursu
+- `lib/layouts` — `ContainerScreen` (donja navigacija, 5 tabova) i `MasterScreen` (stranice s "Back")
+- `lib/screens` — ekrani po tabovima

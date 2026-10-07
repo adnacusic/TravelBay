@@ -1,4 +1,4 @@
-package com.example.ecommerce_mobile
+package ba.travelbay.mobile
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -8,6 +8,7 @@ import '../../providers/collection_provider.dart';
 import '../../utils/dialogs.dart';
 import '../../utils/form_errors.dart';
 import '../../utils/validators.dart';
+import '../../widgets/form_title.dart';
 
 /// Puts a destination into one of the user's collections, or into a new one.
 /// Resolves to a success message.
@@ -121,7 +122,7 @@ class _AddToCollectionSheetState extends State<AddToCollectionSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Dodaj u kolekciju', style: theme.textTheme.titleMedium),
+            FormTitle(title: 'Dodaj u kolekciju', enabled: !_isSaving),
             const SizedBox(height: 8),
             if (_error != null)
               Text(_error!)

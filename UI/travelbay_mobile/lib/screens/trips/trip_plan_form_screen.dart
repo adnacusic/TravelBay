@@ -75,6 +75,7 @@ class _TripPlanFormScreenState extends State<TripPlanFormScreen> {
 
     return MasterScreen(
       title: _isEdit ? 'Uređivanje plana' : 'Novi plan putovanja',
+      isForm: true,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: FormBuilder(

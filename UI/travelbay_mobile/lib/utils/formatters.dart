@@ -25,3 +25,11 @@ DateTime? parseUtc(String? value) {
   final hasOffset = value.endsWith('Z') || RegExp(r'[+-]\d{2}:\d{2}$').hasMatch(value);
   return DateTime.parse(hasOffset ? value : '${value}Z');
 }
+
+/// "1 destinacija", "3 destinacije", "5 destinacija" (Bosnian plural rules).
+String destinationCountLabel(int count) {
+  final lastTwo = count % 100;
+  final last = count % 10;
+  final few = last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14);
+  return '$count ${few ? 'destinacije' : 'destinacija'}';
+}

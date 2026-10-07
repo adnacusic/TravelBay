@@ -10,6 +10,7 @@ import '../../utils/app_navigator.dart';
 import '../../utils/form_errors.dart';
 import '../../utils/trip_dates.dart';
 import '../../utils/validators.dart';
+import '../../widgets/form_title.dart';
 import 'trip_plan_form_screen.dart';
 
 /// Adds a destination to a plan (or edits an existing item): which plan / destination,
@@ -168,7 +169,7 @@ class _TripItemSheetState extends State<TripItemSheet> {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Text(title, style: theme.textTheme.titleMedium),
+                            FormTitle(title: title, enabled: !_isSaving),
                             const SizedBox(height: 16),
                             if (widget.plan == null) ...[
                               FormBuilderDropdown<int>(

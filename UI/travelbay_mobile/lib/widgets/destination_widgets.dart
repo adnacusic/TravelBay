@@ -133,3 +133,62 @@ class DestinationTile extends StatelessWidget {
     );
   }
 }
+
+/// Compact destination row for the user's own lists (saved, collection, history):
+/// cover image, name, place and a line such as the date it was saved.
+class DestinationRefTile extends StatelessWidget {
+  const DestinationRefTile({
+    super.key,
+    required this.name,
+    required this.cityName,
+    required this.imageUrl,
+    required this.detail,
+    required this.onTap,
+    this.trailing,
+  });
+
+  final String name;
+  final String cityName;
+  final String? imageUrl;
+  final String detail;
+  final VoidCallback onTap;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 10, 4, 10),
+          child: Row(
+            children: [
+              NetworkThumbnail(imageUrl: imageUrl, width: 72, height: 60),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: theme.textTheme.titleSmall,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (cityName.isNotEmpty)
+                      Text(cityName, style: theme.textTheme.bodySmall),
+                    const SizedBox(height: 2),
+                    Text(detail, style: theme.textTheme.labelSmall),
+                  ],
+                ),
+              ),
+              ?trailing,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

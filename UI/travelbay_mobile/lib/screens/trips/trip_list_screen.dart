@@ -5,6 +5,7 @@ import '../../models/trip_plan.dart';
 import '../../providers/trip_plan_provider.dart';
 import '../../utils/app_navigator.dart';
 import '../../utils/dialogs.dart';
+import '../../utils/formatters.dart';
 import '../../utils/trip_dates.dart';
 import '../../widgets/trip_status_chip.dart';
 import 'trip_plan_details_screen.dart';
@@ -12,7 +13,10 @@ import 'trip_plan_form_screen.dart';
 
 /// "Putovanja" tab: current plans (draft, active) and previous ones (completed, cancelled).
 class TripListScreen extends StatefulWidget {
-  const TripListScreen({super.key});
+  const TripListScreen({super.key, required this.activation});
+
+  /// Changes every time the tab is opened again (a destination may have been added from its details).
+  final int activation;
 
   @override
   State<TripListScreen> createState() => _TripListScreenState();
@@ -23,6 +27,14 @@ class _TripListScreenState extends State<TripListScreen> {
   int _version = 0;
 
   void _reload() => setState(() => _version++);
+
+  @override
+  void didUpdateWidget(TripListScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.activation != widget.activation) {
+      _version++;
+    }
+  }
 
   Future<void> _create() async {
     final message = await openPage<String>(context, const TripPlanFormScreen());
@@ -167,7 +179,7 @@ class _PlanListState extends State<_PlanList> with AutomaticKeepAliveClientMixin
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             title: Text(plan.name),
-            subtitle: Text('${planPeriod(plan)}\n${plan.items.length} destinacija'),
+            subtitle: Text('${planPeriod(plan)}\n${destinationCountLabel(plan.items.length)}'),
             isThreeLine: true,
             trailing: TripStatusChip(status: plan.status),
             onTap: () => _open(plan),

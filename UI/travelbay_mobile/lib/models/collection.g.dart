@@ -30,6 +30,8 @@ CollectionItem _$CollectionItemFromJson(Map<String, dynamic> json) =>
       id: (json['id'] as num).toInt(),
       destinationId: (json['destinationId'] as num).toInt(),
       destinationName: json['destinationName'] as String? ?? '',
+      cityName: json['cityName'] as String? ?? '',
+      imageUrl: json['imageUrl'] as String?,
       addedAt: const UtcDateTimeConverter().fromJson(json['addedAt'] as String),
     );
 
@@ -38,5 +40,7 @@ Map<String, dynamic> _$CollectionItemToJson(CollectionItem instance) =>
       'id': instance.id,
       'destinationId': instance.destinationId,
       'destinationName': instance.destinationName,
+      'cityName': instance.cityName,
+      'imageUrl': instance.imageUrl,
       'addedAt': const UtcDateTimeConverter().toJson(instance.addedAt),
     };

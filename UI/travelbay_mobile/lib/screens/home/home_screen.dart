@@ -12,14 +12,19 @@ import '../../utils/app_navigator.dart';
 import '../../utils/category_icons.dart';
 import '../../widgets/destination_widgets.dart';
 import '../../widgets/network_thumbnail.dart';
+import '../../widgets/notification_bell.dart';
 import '../destination/destination_details_screen.dart';
 
 /// Start tab: personal recommendations, quick category access and popular destinations.
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.onOpenCategory});
+  const HomeScreen({super.key, required this.onOpenCategory, required this.activation});
 
   /// Opens the search tab filtered by the category.
   final ValueChanged<Category> onOpenCategory;
+
+  /// Changes every time the tab is opened again; preferences or views changed elsewhere
+  /// change the recommendations, so they are loaded again.
+  final int activation;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -68,6 +73,14 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  @override
+  void didUpdateWidget(HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.activation != widget.activation) {
+      _load();
+    }
+  }
+
   /// After a destination was viewed, the recommendations and popularity change.
   Future<void> _openDestination(Destination destination) async {
     await openPage<void>(context, DestinationDetailsScreen(destinationId: destination.id));
@@ -81,7 +94,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final firstName = context.watch<AuthProvider>().displayName.split(' ').first;
 
     return Scaffold(
-      appBar: AppBar(title: Text(firstName.isEmpty ? 'TravelBay' : 'Zdravo, $firstName')),
+      appBar: AppBar(
+        title: Text(firstName.isEmpty ? 'TravelBay' : 'Zdravo, $firstName'),
+        actions: const [NotificationBell()],
+      ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: _buildBody(),

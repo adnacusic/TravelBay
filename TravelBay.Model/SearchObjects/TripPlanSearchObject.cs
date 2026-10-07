@@ -8,5 +8,8 @@ namespace TravelBay.Model.SearchObjects
         public int? UserId { get; set; }
 
         public TripPlanStatus? Status { get; set; }
+
+        /// <summary>true = completed or cancelled (history), false = draft or active (current).</summary>
+        public bool? IsFinished { get; set; }
     }
 }

@@ -4,6 +4,7 @@ using TravelBay.Model.Responses;
 using TravelBay.Model.SearchObjects;
 using TravelBay.Services.Database;
 using FluentValidation;
+using FluentValidation.Results;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
 
@@ -47,6 +48,14 @@ public class TripPlanService
         if (search?.Status.HasValue == true)
         {
             query = query.Where(tp => tp.Status == search.Status.Value);
+        }
+
+        if (search?.IsFinished.HasValue == true)
+        {
+            var finished = new[] { Model.Enums.TripPlanStatus.Completed, Model.Enums.TripPlanStatus.Cancelled };
+            query = search.IsFinished.Value
+                ? query.Where(tp => finished.Contains(tp.Status))
+                : query.Where(tp => !finished.Contains(tp.Status));
         }
 
         return query;
@@ -100,6 +109,17 @@ public class TripPlanService
         await _updateValidator.ValidateAndThrowAsync(request);
 
         var entity = await GetOwnedEntityAsync(id);
+        TripPlanStateMachine.EnsureEditable(entity.Status);
+
+        // A shorter period must still contain every day that already has destinations.
+        var lastUsedDay = await _dbContext.TripPlanItems
+            .Where(i => i.TripPlanId == id)
+            .MaxAsync(i => (int?)i.DayNumber) ?? 0;
+        if (lastUsedDay > DayCount(request.StartDate, request.EndDate))
+        {
+            throw FieldError(nameof(request.EndDate),
+                $"Plan ima destinacije do {lastUsedDay}. dana, pa period mora trajati najmanje {lastUsedDay} dana.");
+        }
 
         entity.Name = request.Name;
         entity.StartDate = request.StartDate;
@@ -135,7 +155,9 @@ public class TripPlanService
 
     public async Task<TripPlanItemResponse> AddItemAsync(int tripPlanId, TripPlanItemInsertRequest request)
     {
-        await GetOwnedEntityAsync(tripPlanId);
+        var plan = await GetOwnedEntityAsync(tripPlanId);
+        TripPlanStateMachine.EnsureEditable(plan.Status);
+        EnsureDayInPlan(plan, request.DayNumber);
 
         var destinationExists = await _dbContext.Destinations.AnyAsync(d => d.Id == request.DestinationId);
         if (!destinationExists)
@@ -148,8 +170,11 @@ public class TripPlanService
             TripPlanId = tripPlanId,
             DestinationId = request.DestinationId,
             DayNumber = request.DayNumber,
-            OrderIndex = request.OrderIndex,
-            Notes = request.Notes
+            // New destinations go to the end of their day.
+            OrderIndex = await _dbContext.TripPlanItems
+                .Where(i => i.TripPlanId == tripPlanId && i.DayNumber == request.DayNumber)
+                .CountAsync(),
+            Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim()
         };
 
         _dbContext.TripPlanItems.Add(item);
@@ -161,7 +186,9 @@ public class TripPlanService
 
     public async Task<TripPlanItemResponse> UpdateItemAsync(int tripPlanId, int itemId, TripPlanItemUpdateRequest request)
     {
-        await GetOwnedEntityAsync(tripPlanId);
+        var plan = await GetOwnedEntityAsync(tripPlanId);
+        TripPlanStateMachine.EnsureEditable(plan.Status);
+        EnsureDayInPlan(plan, request.DayNumber);
 
         var item = await _dbContext.TripPlanItems.Include(i => i.Destination)
             .FirstOrDefaultAsync(i => i.Id == itemId && i.TripPlanId == tripPlanId);
@@ -172,7 +199,7 @@ public class TripPlanService
 
         item.DayNumber = request.DayNumber;
         item.OrderIndex = request.OrderIndex;
-        item.Notes = request.Notes;
+        item.Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim();
         await _dbContext.SaveChangesAsync();
 
         return MapItemToResponse(item);
@@ -180,7 +207,8 @@ public class TripPlanService
 
     public async Task RemoveItemAsync(int tripPlanId, int itemId)
     {
-        await GetOwnedEntityAsync(tripPlanId);
+        var plan = await GetOwnedEntityAsync(tripPlanId);
+        TripPlanStateMachine.EnsureEditable(plan.Status);
 
         var item = await _dbContext.TripPlanItems.FirstOrDefaultAsync(i => i.Id == itemId && i.TripPlanId == tripPlanId);
         if (item == null)
@@ -191,6 +219,22 @@ public class TripPlanService
         _dbContext.TripPlanItems.Remove(item);
         await _dbContext.SaveChangesAsync();
     }
+
+    /// <summary>Day numbers run from 1 to the number of calendar days in the plan.</summary>
+    private static int DayCount(DateTime startDate, DateTime endDate) => (endDate.Date - startDate.Date).Days + 1;
+
+    private static void EnsureDayInPlan(TripPlan plan, int dayNumber)
+    {
+        var days = DayCount(plan.StartDate, plan.EndDate);
+        if (dayNumber < 1 || dayNumber > days)
+        {
+            throw FieldError(nameof(TripPlanItemInsertRequest.DayNumber), $"Dan mora biti između 1 i {days}.");
+        }
+    }
+
+    /// <summary>A rule that needs the database, reported like a validation error so clients show it under the field.</summary>
+    private static ValidationException FieldError(string propertyName, string message) =>
+        new(new[] { new ValidationFailure(propertyName, message) });
 
     private async Task<TripPlan> GetOwnedEntityAsync(int tripPlanId)
     {

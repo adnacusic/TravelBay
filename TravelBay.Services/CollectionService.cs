@@ -116,6 +116,13 @@ public class CollectionService
             throw new ClientException("Destination not found.");
         }
 
+        var alreadyInCollection = await _dbContext.CollectionItems
+            .AnyAsync(i => i.CollectionId == collectionId && i.DestinationId == request.DestinationId);
+        if (alreadyInCollection)
+        {
+            throw new BusinessException("Destinacija je već u ovoj kolekciji.");
+        }
+
         var item = new CollectionItem
         {
             CollectionId = collectionId,

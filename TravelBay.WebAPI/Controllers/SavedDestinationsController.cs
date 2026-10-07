@@ -1,5 +1,6 @@
 using TravelBay.Model.Requests;
 using TravelBay.Model.Responses;
+using TravelBay.Model.SearchObjects;
 using TravelBay.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +20,8 @@ public class SavedDestinationsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<SavedDestinationResponse>>> GetAll() => Ok(await _savedDestinationService.GetAllAsync());
+    public async Task<ActionResult<PageResult<SavedDestinationResponse>>> GetAll([FromQuery] SavedDestinationSearchObject? search) =>
+        Ok(await _savedDestinationService.GetAllAsync(search));
 
     [HttpPost]
     public async Task<ActionResult<SavedDestinationResponse>> Add([FromBody] SavedDestinationInsertRequest request) =>

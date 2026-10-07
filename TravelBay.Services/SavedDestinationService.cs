@@ -1,6 +1,8 @@
+using TravelBay.Model.Constants;
 using TravelBay.Model.Exceptions;
 using TravelBay.Model.Requests;
 using TravelBay.Model.Responses;
+using TravelBay.Model.SearchObjects;
 using TravelBay.Services.Database;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,15 +22,29 @@ public class SavedDestinationService : ISavedDestinationService
     private int CurrentUserId() =>
         _userAccessor.GetUserId() ?? throw new InvalidOperationException("User id claim is missing.");
 
-    public async Task<List<SavedDestinationResponse>> GetAllAsync()
+    public async Task<PageResult<SavedDestinationResponse>> GetAllAsync(SavedDestinationSearchObject? search)
     {
+        search ??= new SavedDestinationSearchObject();
         var userId = CurrentUserId();
 
-        return await _dbContext.SavedDestinations
+        var query = _dbContext.SavedDestinations
             .AsNoTracking()
-            .Include(sd => sd.Destination)
-            .Where(sd => sd.UserId == userId)
+            .Where(sd => sd.UserId == userId);
+
+        if (search.DestinationId.HasValue)
+        {
+            query = query.Where(sd => sd.DestinationId == search.DestinationId.Value);
+        }
+
+        int? totalCount = search.IncludeTotalCount == true ? await query.CountAsync() : null;
+        var page = search.Page ?? 1;
+        var pageSize = search.PageSize ?? PagingDefaults.DefaultPageSize;
+
+        var items = await query
             .OrderByDescending(sd => sd.SavedAt)
+            .ThenByDescending(sd => sd.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(sd => new SavedDestinationResponse
             {
                 Id = sd.Id,
@@ -37,6 +53,8 @@ public class SavedDestinationService : ISavedDestinationService
                 SavedAt = sd.SavedAt
             })
             .ToListAsync();
+
+        return new PageResult<SavedDestinationResponse> { Items = items, TotalCount = totalCount };
     }
 
     public async Task<SavedDestinationResponse> AddAsync(SavedDestinationInsertRequest request)
@@ -50,7 +68,7 @@ public class SavedDestinationService : ISavedDestinationService
             .AnyAsync(sd => sd.UserId == userId && sd.DestinationId == request.DestinationId);
         if (alreadySaved)
         {
-            throw new BusinessException("This destination is already saved.");
+            throw new BusinessException("Ova destinacija je već sačuvana.");
         }
 
         var entity = new SavedDestination

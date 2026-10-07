@@ -12,6 +12,30 @@ namespace TravelBay.Services;
 /// </summary>
 public class TripPlanStateMachine : ITripPlanStateMachine
 {
+    /// <summary>Statuses in which the plan, its dates and its destinations may still change.</summary>
+    private static readonly TripPlanStatus[] EditableStatuses = { TripPlanStatus.Draft, TripPlanStatus.Active };
+
+    public static bool IsEditable(TripPlanStatus status) => EditableStatuses.Contains(status);
+
+    /// <summary>Completed and cancelled plans are history: read-only.</summary>
+    public static void EnsureEditable(TripPlanStatus status)
+    {
+        if (!IsEditable(status))
+        {
+            throw new BusinessException($"Plan putovanja je {Label(status)} i više se ne može mijenjati.");
+        }
+    }
+
+    /// <summary>Status as shown to the user (notifications, messages).</summary>
+    public static string Label(TripPlanStatus status) => status switch
+    {
+        TripPlanStatus.Draft => "u pripremi",
+        TripPlanStatus.Active => "aktivan",
+        TripPlanStatus.Completed => "završen",
+        TripPlanStatus.Cancelled => "otkazan",
+        _ => status.ToString()
+    };
+
     private readonly TravelBayDbContext _dbContext;
     private readonly IAuthenticatedUserAccessor _userAccessor;
     private readonly IAuditLogService _auditLogService;
@@ -58,7 +82,7 @@ public class TripPlanStateMachine : ITripPlanStateMachine
         var allowed = allowedFrom ?? new[] { from!.Value };
         if (!allowed.Contains(entity.Status))
         {
-            throw new BusinessException($"Cannot move TripPlan from {entity.Status} to {to}.");
+            throw new BusinessException($"Plan putovanja koji je {Label(entity.Status)} ne može postati {Label(to)}.");
         }
 
         entity.Status = to;
@@ -66,7 +90,7 @@ public class TripPlanStateMachine : ITripPlanStateMachine
         await _dbContext.SaveChangesAsync();
 
         await _auditLogService.LogAsync(nameof(TripPlan), entity.Id, $"StatusChanged:{to}", userId, $"Trip plan '{entity.Name}' moved to {to}.");
-        await _notificationService.CreateAsync(entity.UserId, "Status plana putovanja promijenjen", $"Plan '{entity.Name}' je sada {to}.", NotificationType.TripStatusChanged);
+        await _notificationService.CreateAsync(entity.UserId, "Status plana putovanja promijenjen", $"Plan '{entity.Name}' je sada {Label(to)}.", NotificationType.TripStatusChanged);
 
         return new TripPlanResponse
         {

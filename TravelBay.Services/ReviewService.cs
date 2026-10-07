@@ -59,16 +59,25 @@ public class ReviewService
             {
                 query = query.Where(r => r.UserId == search.UserId.Value);
             }
-            if (search?.Status.HasValue == true)
-            {
-                query = query.Where(r => r.Status == search.Status.Value);
-            }
         }
         else
         {
             // Public visibility: approved reviews from anyone, plus the caller's own (any status).
             var userId = _userAccessor.GetUserId();
             query = query.Where(r => r.Status == ReviewStatus.Approved || (userId.HasValue && r.UserId == userId.Value));
+        }
+
+        if (search?.OnlyMine == true)
+        {
+            var currentUserId = _userAccessor.GetUserId();
+            query = query.Where(r => r.UserId == currentUserId);
+        }
+
+        // Within what the caller may see: e.g. a user asks for Approved (the public list)
+        // or Pending (their own review waiting for moderation).
+        if (search?.Status.HasValue == true)
+        {
+            query = query.Where(r => r.Status == search.Status.Value);
         }
 
         if (search?.DestinationId.HasValue == true)
@@ -100,6 +109,14 @@ public class ReviewService
         if (!destinationExists)
         {
             throw new ClientException("Destination not found.");
+        }
+
+        // One opinion per destination: a new review is possible only after the previous one was rejected.
+        var hasActiveReview = await _dbContext.Reviews.AnyAsync(r =>
+            r.UserId == userId && r.DestinationId == request.DestinationId && r.Status != ReviewStatus.Rejected);
+        if (hasActiveReview)
+        {
+            throw new BusinessException("Već ste ocijenili ovu destinaciju. Vaša recenzija je objavljena ili čeka odobrenje.");
         }
 
         var review = new Review

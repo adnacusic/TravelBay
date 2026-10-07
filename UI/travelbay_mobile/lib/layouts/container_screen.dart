@@ -4,6 +4,7 @@ import '../models/category.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/search/search_screen.dart';
+import '../screens/trips/trip_list_screen.dart';
 import '../widgets/coming_soon.dart';
 
 enum AppTab { home, search, trips, saved, profile }
@@ -59,11 +60,7 @@ class _ContainerScreenState extends State<ContainerScreen> {
             key: ValueKey(_searchRequest),
             initialCategoryId: _searchCategoryId,
           ),
-          const ComingSoon(
-            title: 'Putovanja',
-            icon: Icons.map_outlined,
-            text: 'Planovi putovanja s itinerarom po danima stižu u sljedećem koraku.',
-          ),
+          const TripListScreen(),
           const ComingSoon(
             title: 'Sačuvano',
             icon: Icons.bookmark_border,

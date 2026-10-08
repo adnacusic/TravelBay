@@ -66,7 +66,7 @@ DI) se preimenuje `Product*` → `Destination*`, ali skup polja se mijenja (ne 1
 | Description | string, req | |
 | CategoryId | int, FK req → Category | **NOVO** (zamjenjuje N-N `ProductCategories`) |
 | CityId | int, FK req → City | **NOVO** |
-| Keywords | string?, nullable | puni AI agent (worker faza) |
+| Keywords | string?, nullable | puni AI agent (AIAgentKeywords) ili admin; u seedu već popunjeno |
 | CreatedAt | DateTime (UTC) | |
 | UpdatedAt | DateTime?, nullable | |
 | IsDeleted | bool = false | soft delete + global query filter |
@@ -201,21 +201,21 @@ enum NotificationType { ReviewApproved, ReviewRejected, TripStatusChanged, News,
 | City | 10-12 | Sarajevo, Mostar, Trebinje, Neum, Blagaj, Počitelj, Jajce, Konjic, Bihać, Foča (BiH); Dubrovnik, Split (Hrvatska); Kotor, Budva, Perast (Crna Gora) |
 | Category | 5 | fiksno: Plaže, Planine, Historija, Hrana, Priroda |
 | Destination | 22-25 | min 3 po kategoriji; npr. Stari Most/Mostar, Blagaj, Počitelj, Sarajevo (Baščaršija), Bjelašnica, Vrelo Bosne, Kravica, Jajce, Konjic, Lukomir, Una NP, Sutjeska, Dubrovnik, Split, Kotor, Budva, Perast, Neum, Trebinje... |
-| DestinationImage | ~15-18 | na ~12-14 destinacija; **ostatak destinacija namjerno bez slike** (zadatak za AI agente u worker fazi) |
+| DestinationImage | 24 | po jedna slobodna Wikimedia Commons slika za svaku destinaciju (izbor AIAgentSlike, `IsAiGenerated`, izvor = licenca + autor); nove destinacije bez slike obrađuje agent |
 | Role | 2 | Admin, User |
 | User | 7 | `desktop`/`test` (Admin), `mobile`/`test` (User), + 5 običnih korisnika |
 | UserRole | 7 | 1 po korisniku |
-| Review | ~30-35 | raspoređeno po više destinacija; većina `Approved`, par `Pending`, min. 1 `Rejected` |
-| TripPlan | 5-6 | različiti statusi (Draft/Active/Completed/Cancelled) |
-| TripPlanItem | 15-20 | 2-4 stavke po planu |
+| Review | 32 | raspoređeno po više destinacija; većina `Approved`, par `Pending`, min. 1 `Rejected` |
+| TripPlan | 8 | različiti statusi (Draft/Active/Completed/Cancelled); 2 za `mobile` (Active, Completed) |
+| TripPlanItem | 23 | 2-3 stavke po planu |
 | Collection | 5-6 | |
 | CollectionItem | 15-20 | |
-| SavedDestination | 15-20 | |
-| UserPreference | 10-12 | 2-3 kategorije po "običnom" korisniku (za recommender) |
-| ViewHistory | 30-40 | realna historija pregleda (za recommender) |
-| Notification | 10-12 | miks tipova |
+| SavedDestination | 22 | uključujući 2 za `mobile` |
+| UserPreference | 14 | 2-3 kategorije po korisniku (za recommender), uključujući `mobile` |
+| ViewHistory | 40 | realna historija pregleda (za recommender), uključujući `mobile` |
+| Notification | 12 | miks tipova, tekstovi kao iz state machine-a |
 | News | 5 | svaka sa `ImageUrl` |
-| AuditLog | 3-5 ili 0 | vidi pitanje §7.4 |
+| AuditLog | 11 | prati moderisane recenzije i promjene statusa planova iz seeda |
 | Asset | 0-2 | opciono, profilna slika za 1-2 test korisnika |
 
 **Napomena o prosjeku ocjene**: `Destination` NEMA polje za prosječnu ocjenu — računa se iz

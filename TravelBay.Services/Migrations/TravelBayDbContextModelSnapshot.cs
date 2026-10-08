@@ -219,6 +219,36 @@ namespace TravelBay.Services.Migrations
                             EntityName = "TripPlan",
                             PerformedAt = new DateTime(2026, 3, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             PerformedByUserId = 7
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Action = "Approved",
+                            Details = "Review for destination 11 approved.",
+                            EntityId = 32,
+                            EntityName = "Review",
+                            PerformedAt = new DateTime(2026, 3, 8, 0, 0, 0, 0, DateTimeKind.Utc),
+                            PerformedByUserId = 1
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Action = "StatusChanged:Active",
+                            Details = "Trip plan 'Zima u Hercegovini' moved to Active.",
+                            EntityId = 7,
+                            EntityName = "TripPlan",
+                            PerformedAt = new DateTime(2026, 4, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            PerformedByUserId = 2
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Action = "StatusChanged:Completed",
+                            Details = "Trip plan 'Vikend na Uni' moved to Completed.",
+                            EntityId = 8,
+                            EntityName = "TripPlan",
+                            PerformedAt = new DateTime(2026, 5, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            PerformedByUserId = 2
                         });
                 });
 
@@ -475,7 +505,7 @@ namespace TravelBay.Services.Migrations
                         {
                             Id = 6,
                             CreatedAt = new DateTime(2026, 1, 30, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Mobile test kolekcija",
+                            Name = "Moja lista želja",
                             UserId = 2
                         });
                 });
@@ -744,6 +774,7 @@ namespace TravelBay.Services.Migrations
                             CreatedAt = new DateTime(2026, 1, 18, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Srednjovjekovno utvrđeno naselje iznad rijeke Neretve, poznato po kuli Hamam i kamenoj arhitekturi.",
                             IsDeleted = false,
+                            Keywords = "Počitelj Mostar Bosnia and Herzegovina, Medieval fortress, Neretva river, Stone architecture",
                             Name = "Počitelj"
                         },
                         new
@@ -754,6 +785,7 @@ namespace TravelBay.Services.Migrations
                             CreatedAt = new DateTime(2026, 1, 19, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Srednjovjekovna tvrđava i posljednja prijestonica bosanskih kraljeva, smještena iznad vodopada Pliva.",
                             IsDeleted = false,
+                            Keywords = "Tvrđava Jajce Jajce Bosnia and Herzegovina, medieval fortress, last Bosnian royal citadel, over Pliva waterfall",
                             Name = "Tvrđava Jajce"
                         },
                         new
@@ -786,6 +818,7 @@ namespace TravelBay.Services.Migrations
                             CreatedAt = new DateTime(2026, 1, 22, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Planina iznad Sarajeva, olimpijsko skijalište iz 1984. godine s panoramskim pogledom na okolne vrhove.",
                             IsDeleted = false,
+                            Keywords = "Bjelašnica Sarajevo Bosnia and Herzegovina, mountain, ski resort, Olympic 1984, panoramic view",
                             Name = "Bjelašnica"
                         },
                         new
@@ -796,6 +829,7 @@ namespace TravelBay.Services.Migrations
                             CreatedAt = new DateTime(2026, 1, 23, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Najviše i najizolovanije stalno naseljeno selo u BiH, poznato po očuvanoj tradicionalnoj arhitekturi.",
                             IsDeleted = false,
+                            Keywords = "Lukomir Sarajevo Bosnia and Herzegovina, mountain village, traditional architecture, isolated settlement, highest village",
                             Name = "Lukomir"
                         },
                         new
@@ -806,6 +840,7 @@ namespace TravelBay.Services.Migrations
                             CreatedAt = new DateTime(2026, 1, 24, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Najjužniji planinski masiv Dinarida s vrhovima iznad 1800m, blizu granice s Crnom Gorom.",
                             IsDeleted = false,
+                            Keywords = "Orjen Trebinje Bosnia and Herzegovina, southern Dinaric mountain, mountain massif, border with Montenegro, peaks above 1800m",
                             Name = "Orjen"
                         },
                         new
@@ -838,6 +873,7 @@ namespace TravelBay.Services.Migrations
                             CreatedAt = new DateTime(2026, 1, 27, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Nacionalni park oko rijeke Une poznate po bistroj vodi, brzacima i slapovima Štrbački buk.",
                             IsDeleted = false,
+                            Keywords = "Nacionalni park Una Bihać Bosnia and Herzegovina, river Una, clear water, rapids, Strbacki Buk waterfalls",
                             Name = "Nacionalni park Una"
                         },
                         new
@@ -859,6 +895,7 @@ namespace TravelBay.Services.Migrations
                             CreatedAt = new DateTime(2026, 1, 29, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Najstariji nacionalni park u BiH s prašumom Perućica i najvišim vrhom Maglić (2386m).",
                             IsDeleted = false,
+                            Keywords = "Sutjeska National Park Foča Bosnia and Herzegovina, oldest national park, Perućica forest, Mount Maglić, 2386m peak",
                             Name = "Nacionalni park Sutjeska"
                         },
                         new
@@ -869,6 +906,7 @@ namespace TravelBay.Services.Migrations
                             CreatedAt = new DateTime(2026, 1, 30, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Glacijalno jezero okruženo šumovitim planinama u blizini Konjica, pogodno za kupanje i rekreaciju.",
                             IsDeleted = false,
+                            Keywords = "Boračko jezero Konjic Bosnia and Herzegovina, glacial lake, forested mountains, swimming, recreation",
                             Name = "Boračko jezero"
                         },
                         new
@@ -890,6 +928,7 @@ namespace TravelBay.Services.Migrations
                             CreatedAt = new DateTime(2026, 2, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Hercegovačka vinska regija oko Trebinja poznata po žilavki i vranacu.",
                             IsDeleted = false,
+                            Keywords = "Trebinje Bosnia and Herzegovina, wine cellar, herzegovinian wine, zlatna žilavka, vranac",
                             Name = "Vinski podrumi Trebinja"
                         },
                         new
@@ -900,6 +939,7 @@ namespace TravelBay.Services.Migrations
                             CreatedAt = new DateTime(2026, 2, 2, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Riblji restorani duž jedine bosanskohercegovačke obale, poznati po svježim plodovima mora.",
                             IsDeleted = false,
+                            Keywords = "Neum Bosnia and Herzegovina, seafood restaurants, fresh fish, coastal cuisine, Bosnian Adriatic",
                             Name = "Neum — morski specijaliteti"
                         },
                         new
@@ -910,6 +950,7 @@ namespace TravelBay.Services.Migrations
                             CreatedAt = new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Degustacija lokalnih specijaliteta Mostara i okoline — suhog mesa, sira i domaćeg vina.",
                             IsDeleted = false,
+                            Keywords = "Herzegovinian culinary tour Mostar Bosnia and Herzegovina, dry meat, cheese, home wine",
                             Name = "Hercegovačka kulinarska tura"
                         },
                         new
@@ -942,6 +983,7 @@ namespace TravelBay.Services.Migrations
                             CreatedAt = new DateTime(2026, 2, 6, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Najpoznatija splitska plaža u obliku školjke, poznata po igri 'picigin'.",
                             IsDeleted = false,
+                            Keywords = "Bačvice Split Croatia, shaped like a shell, picigin game, popular beach",
                             Name = "Bačvice"
                         },
                         new
@@ -952,6 +994,7 @@ namespace TravelBay.Services.Migrations
                             CreatedAt = new DateTime(2026, 2, 7, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Dvije uvale pješčano-šljunčane plaže ispod stare budvanske tvrđave.",
                             IsDeleted = false,
+                            Keywords = "Plaža Mogren Budva Crna Gora, sand pebble beach, two coves, old fort view",
                             Name = "Plaža Mogren"
                         },
                         new
@@ -1013,170 +1056,240 @@ namespace TravelBay.Services.Migrations
                             Id = 1,
                             CreatedAt = new DateTime(2026, 1, 16, 0, 0, 0, 0, DateTimeKind.Utc),
                             DestinationId = 1,
-                            ImageUrl = "https://picsum.photos/seed/travelbay-1/800/600",
-                            IsAiGenerated = false,
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d7/Mostar_Old_Town_Panorama_2007.jpg/1280px-Mostar_Old_Town_Panorama_2007.jpg",
+                            IsAiGenerated = true,
                             OrderIndex = 0,
-                            Source = "Seed data"
+                            Source = "Wikimedia Commons · CC BY-SA 4.0 · Ramirez"
                         },
                         new
                         {
                             Id = 2,
                             CreatedAt = new DateTime(2026, 1, 17, 0, 0, 0, 0, DateTimeKind.Utc),
                             DestinationId = 2,
-                            ImageUrl = "https://picsum.photos/seed/travelbay-2/800/600",
-                            IsAiGenerated = false,
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c5/Ba%C5%A1%C4%8Dar%C5%A1ija_2006.jpg/1280px-Ba%C5%A1%C4%8Dar%C5%A1ija_2006.jpg",
+                            IsAiGenerated = true,
                             OrderIndex = 0,
-                            Source = "Seed data"
+                            Source = "Wikimedia Commons · Public domain · en:User:Dark Apostrophe"
                         },
                         new
                         {
                             Id = 3,
                             CreatedAt = new DateTime(2026, 1, 18, 0, 0, 0, 0, DateTimeKind.Utc),
                             DestinationId = 3,
-                            ImageUrl = "https://picsum.photos/seed/travelbay-3/800/600",
-                            IsAiGenerated = false,
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7f/Pocitelj%2C_Capljina.JPG/1280px-Pocitelj%2C_Capljina.JPG",
+                            IsAiGenerated = true,
                             OrderIndex = 0,
-                            Source = "Seed data"
+                            Source = "Wikimedia Commons · CC BY 3.0 rs · korisnik srpske Wikipedije"
                         },
                         new
                         {
                             Id = 4,
-                            CreatedAt = new DateTime(2026, 1, 20, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DestinationId = 5,
-                            ImageUrl = "https://picsum.photos/seed/travelbay-5/800/600",
-                            IsAiGenerated = false,
+                            CreatedAt = new DateTime(2026, 1, 19, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DestinationId = 4,
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2f/Jajce_Tvrdava.JPG/1280px-Jajce_Tvrdava.JPG",
+                            IsAiGenerated = true,
                             OrderIndex = 0,
-                            Source = "Seed data"
+                            Source = "Wikimedia Commons · CC BY-SA 4.0 · Dans"
                         },
                         new
                         {
                             Id = 5,
-                            CreatedAt = new DateTime(2026, 1, 21, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DestinationId = 6,
-                            ImageUrl = "https://picsum.photos/seed/travelbay-6/800/600",
-                            IsAiGenerated = false,
+                            CreatedAt = new DateTime(2026, 1, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DestinationId = 5,
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/20/Trebinje_Stari_grad.jpg/1280px-Trebinje_Stari_grad.jpg",
+                            IsAiGenerated = true,
                             OrderIndex = 0,
-                            Source = "Seed data"
+                            Source = "Wikimedia Commons · CC BY-SA 4.0 · ER photography"
                         },
                         new
                         {
                             Id = 6,
-                            CreatedAt = new DateTime(2026, 1, 22, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DestinationId = 7,
-                            ImageUrl = "https://picsum.photos/seed/travelbay-7/800/600",
-                            IsAiGenerated = false,
+                            CreatedAt = new DateTime(2026, 1, 21, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DestinationId = 6,
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a3/Dubrovnik%2C_stari_grad.jpg/1280px-Dubrovnik%2C_stari_grad.jpg",
+                            IsAiGenerated = true,
                             OrderIndex = 0,
-                            Source = "Seed data"
+                            Source = "Wikimedia Commons · CC BY-SA 4.0 · Marko Jukić -Majkl"
                         },
                         new
                         {
                             Id = 7,
-                            CreatedAt = new DateTime(2026, 1, 25, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DestinationId = 10,
-                            ImageUrl = "https://picsum.photos/seed/travelbay-10/800/600",
-                            IsAiGenerated = false,
+                            CreatedAt = new DateTime(2026, 1, 22, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DestinationId = 7,
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8a/Bjela%C5%A1nica_1984.jpg/1280px-Bjela%C5%A1nica_1984.jpg",
+                            IsAiGenerated = true,
                             OrderIndex = 0,
-                            Source = "Seed data"
+                            Source = "Wikimedia Commons · CC BY-SA 4.0 · Zavičajac"
                         },
                         new
                         {
                             Id = 8,
-                            CreatedAt = new DateTime(2026, 1, 26, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DestinationId = 11,
-                            ImageUrl = "https://picsum.photos/seed/travelbay-11/800/600",
-                            IsAiGenerated = false,
+                            CreatedAt = new DateTime(2026, 1, 23, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DestinationId = 8,
+                            ImageUrl = "https://upload.wikimedia.org/wikipedia/commons/1/1c/Lukomirske_udoli%2C_rozparcelovane_na_ovci_ohrady.jpg",
+                            IsAiGenerated = true,
                             OrderIndex = 0,
-                            Source = "Seed data"
+                            Source = "Wikimedia Commons · CC BY 3.0 · Martin Brož"
                         },
                         new
                         {
                             Id = 9,
-                            CreatedAt = new DateTime(2026, 1, 27, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DestinationId = 12,
-                            ImageUrl = "https://picsum.photos/seed/travelbay-12/800/600",
-                            IsAiGenerated = false,
+                            CreatedAt = new DateTime(2026, 1, 24, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DestinationId = 9,
+                            ImageUrl = "https://upload.wikimedia.org/wikipedia/commons/d/d3/Vyhled_z_Orjenu_na_S_-_Trebinje_v_BaH.jpg",
+                            IsAiGenerated = true,
                             OrderIndex = 0,
-                            Source = "Seed data"
+                            Source = "Wikimedia Commons · CC BY 3.0 · Martin Brož"
                         },
                         new
                         {
                             Id = 10,
-                            CreatedAt = new DateTime(2026, 1, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DestinationId = 13,
-                            ImageUrl = "https://picsum.photos/seed/travelbay-13/800/600",
-                            IsAiGenerated = false,
+                            CreatedAt = new DateTime(2026, 1, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DestinationId = 10,
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/86/Vrelo_Bosne%2C_Sarajevo.jpg/1280px-Vrelo_Bosne%2C_Sarajevo.jpg",
+                            IsAiGenerated = true,
                             OrderIndex = 0,
-                            Source = "Seed data"
+                            Source = "Wikimedia Commons · CC BY 2.5 · Author's own photo"
                         },
                         new
                         {
                             Id = 11,
-                            CreatedAt = new DateTime(2026, 1, 30, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DestinationId = 15,
-                            ImageUrl = "https://picsum.photos/seed/travelbay-15/800/600",
-                            IsAiGenerated = false,
+                            CreatedAt = new DateTime(2026, 1, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DestinationId = 11,
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0d/Kravica_Waterfalls%2CBosnia_%26_Herzegovina.jpg/1280px-Kravica_Waterfalls%2CBosnia_%26_Herzegovina.jpg",
+                            IsAiGenerated = true,
                             OrderIndex = 0,
-                            Source = "Seed data"
+                            Source = "Wikimedia Commons · CC BY 2.0 · john mcsporran from Trossachs, Scotland"
                         },
                         new
                         {
                             Id = 12,
-                            CreatedAt = new DateTime(2026, 1, 31, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DestinationId = 16,
-                            ImageUrl = "https://picsum.photos/seed/travelbay-16/800/600",
-                            IsAiGenerated = false,
+                            CreatedAt = new DateTime(2026, 1, 27, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DestinationId = 12,
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ee/Vuk%2C_Nacionalni_park_Una.jpg/1280px-Vuk%2C_Nacionalni_park_Una.jpg",
+                            IsAiGenerated = true,
                             OrderIndex = 0,
-                            Source = "Seed data"
+                            Source = "Wikimedia Commons · CC BY-SA 4.0 · Nacionalni park Una"
                         },
                         new
                         {
                             Id = 13,
-                            CreatedAt = new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DestinationId = 19,
-                            ImageUrl = "https://picsum.photos/seed/travelbay-19/800/600",
-                            IsAiGenerated = false,
+                            CreatedAt = new DateTime(2026, 1, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DestinationId = 13,
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/42/Vrelo_Bune_i_tekija.jpg/1280px-Vrelo_Bune_i_tekija.jpg",
+                            IsAiGenerated = true,
                             OrderIndex = 0,
-                            Source = "Seed data"
+                            Source = "Wikimedia Commons · CC BY 2.0 · CJ"
                         },
                         new
                         {
                             Id = 14,
-                            CreatedAt = new DateTime(2026, 2, 4, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DestinationId = 20,
-                            ImageUrl = "https://picsum.photos/seed/travelbay-20/800/600",
-                            IsAiGenerated = false,
+                            CreatedAt = new DateTime(2026, 1, 29, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DestinationId = 14,
+                            ImageUrl = "https://upload.wikimedia.org/wikipedia/commons/e/ea/Peru%C4%87ica.jpg",
+                            IsAiGenerated = true,
                             OrderIndex = 0,
-                            Source = "Seed data"
+                            Source = "Wikimedia Commons · CC BY-SA 4.0 · Minja Klarić"
                         },
                         new
                         {
                             Id = 15,
-                            CreatedAt = new DateTime(2026, 2, 5, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DestinationId = 21,
-                            ImageUrl = "https://picsum.photos/seed/travelbay-21/800/600",
-                            IsAiGenerated = false,
+                            CreatedAt = new DateTime(2026, 1, 30, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DestinationId = 15,
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/82/Boracko_jezero.JPG/1280px-Boracko_jezero.JPG",
+                            IsAiGenerated = true,
                             OrderIndex = 0,
-                            Source = "Seed data"
+                            Source = "Wikimedia Commons · Public domain · Rochass"
                         },
                         new
                         {
                             Id = 16,
-                            CreatedAt = new DateTime(2026, 2, 6, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DestinationId = 22,
-                            ImageUrl = "https://picsum.photos/seed/travelbay-22/800/600",
-                            IsAiGenerated = false,
+                            CreatedAt = new DateTime(2026, 1, 31, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DestinationId = 16,
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d7/Sarajevo%2C_panoramatick%C3%BD_pohled_na_Ba%C5%A1%C4%8Dar%C5%A1iji.jpg/1280px-Sarajevo%2C_panoramatick%C3%BD_pohled_na_Ba%C5%A1%C4%8Dar%C5%A1iji.jpg",
+                            IsAiGenerated = true,
                             OrderIndex = 0,
-                            Source = "Seed data"
+                            Source = "Wikimedia Commons · CC BY 3.0 · Aktron"
                         },
                         new
                         {
                             Id = 17,
+                            CreatedAt = new DateTime(2026, 2, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DestinationId = 17,
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ca/Iglesia_Nova_Gracanica%2C_Trebinje%2C_Bosnia_y_Herzegovina%2C_2014-04-14%2C_DD_04.jpg/1280px-Iglesia_Nova_Gracanica%2C_Trebinje%2C_Bosnia_y_Herzegovina%2C_2014-04-14%2C_DD_04.jpg",
+                            IsAiGenerated = true,
+                            OrderIndex = 0,
+                            Source = "Wikimedia Commons · CC BY-SA 3.0 · Diego Delso"
+                        },
+                        new
+                        {
+                            Id = 18,
+                            CreatedAt = new DateTime(2026, 2, 2, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DestinationId = 18,
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/12/Neum_%28BiH%29_-_general_view.jpg/1280px-Neum_%28BiH%29_-_general_view.jpg",
+                            IsAiGenerated = true,
+                            OrderIndex = 0,
+                            Source = "Wikimedia Commons · CC BY-SA 3.0 · Pudelek (Marcin Szala)"
+                        },
+                        new
+                        {
+                            Id = 19,
+                            CreatedAt = new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DestinationId = 19,
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/33/Mostar_Stari_Most_BW_2024-10-01_11-58-11.jpg/1280px-Mostar_Stari_Most_BW_2024-10-01_11-58-11.jpg",
+                            IsAiGenerated = true,
+                            OrderIndex = 0,
+                            Source = "Wikimedia Commons · CC BY-SA 4.0 · Berthold Werner"
+                        },
+                        new
+                        {
+                            Id = 20,
+                            CreatedAt = new DateTime(2026, 2, 4, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DestinationId = 20,
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Zenit_Beach_in_Neum%2C_2024_2.jpg/1280px-Zenit_Beach_in_Neum%2C_2024_2.jpg",
+                            IsAiGenerated = true,
+                            OrderIndex = 0,
+                            Source = "Wikimedia Commons · CC0 · Bdx"
+                        },
+                        new
+                        {
+                            Id = 21,
+                            CreatedAt = new DateTime(2026, 2, 5, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DestinationId = 21,
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/76/Pla%C5%BEa_Banje_004.jpg/1280px-Pla%C5%BEa_Banje_004.jpg",
+                            IsAiGenerated = true,
+                            OrderIndex = 0,
+                            Source = "Wikimedia Commons · CC BY-SA 4.0 · Vojtěch Dočkal"
+                        },
+                        new
+                        {
+                            Id = 22,
+                            CreatedAt = new DateTime(2026, 2, 6, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DestinationId = 22,
+                            ImageUrl = "https://upload.wikimedia.org/wikipedia/commons/d/dd/Bacvice.jpg",
+                            IsAiGenerated = true,
+                            OrderIndex = 0,
+                            Source = "Wikimedia Commons · CC BY-SA 1.0 · Airin"
+                        },
+                        new
+                        {
+                            Id = 23,
+                            CreatedAt = new DateTime(2026, 2, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DestinationId = 23,
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e3/01_Mogren_beach.jpg/1280px-01_Mogren_beach.jpg",
+                            IsAiGenerated = true,
+                            OrderIndex = 0,
+                            Source = "Wikimedia Commons · CC BY-SA 4.0 · BuhaM"
+                        },
+                        new
+                        {
+                            Id = 24,
                             CreatedAt = new DateTime(2026, 2, 8, 0, 0, 0, 0, DateTimeKind.Utc),
                             DestinationId = 24,
-                            ImageUrl = "https://picsum.photos/seed/travelbay-24/800/600",
-                            IsAiGenerated = false,
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/65/Montenegro._Gospa_od_%C5%A0krpjela_15.jpg/1280px-Montenegro._Gospa_od_%C5%A0krpjela_15.jpg",
+                            IsAiGenerated = true,
                             OrderIndex = 0,
-                            Source = "Seed data"
+                            Source = "Wikimedia Commons · CC BY-SA 4.0 · Oktoober"
                         });
                 });
 
@@ -1223,7 +1336,7 @@ namespace TravelBay.Services.Migrations
                             Id = 1,
                             Content = "Grad Sarajevo pokreće tri nove pješačke ture kroz historijsko jezgro grada.",
                             CreatedAt = new DateTime(2026, 3, 4, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ImageUrl = "https://picsum.photos/seed/travelbay-news-1/800/400",
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/View_of_Sarajevo_Old_Town_at_Night..JPG/1280px-View_of_Sarajevo_Old_Town_at_Night..JPG",
                             PublishedAt = new DateTime(2026, 3, 4, 0, 0, 0, 0, DateTimeKind.Utc),
                             Title = "Sarajevo uvodi nove turističke rute"
                         },
@@ -1232,7 +1345,7 @@ namespace TravelBay.Services.Migrations
                             Id = 2,
                             Content = "Hrvatska i Crna Gora bilježe rekordan broj turista ove ljetne sezone.",
                             CreatedAt = new DateTime(2026, 3, 5, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ImageUrl = "https://picsum.photos/seed/travelbay-news-2/800/400",
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/47/01_Croatia_summer_vacation_destination_-_seaside_village_Dolac_between_Primosten_and_Bilo%2C_Dalmatia.jpg/1280px-01_Croatia_summer_vacation_destination_-_seaside_village_Dolac_between_Primosten_and_Bilo%2C_Dalmatia.jpg",
                             PublishedAt = new DateTime(2026, 3, 5, 0, 0, 0, 0, DateTimeKind.Utc),
                             Title = "Rekordna sezona na Jadranu"
                         },
@@ -1241,7 +1354,7 @@ namespace TravelBay.Services.Migrations
                             Id = 3,
                             Content = "NP Una i NP Sutjeska proširuju mrežu markiranih planinarskih staza.",
                             CreatedAt = new DateTime(2026, 3, 6, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ImageUrl = "https://picsum.photos/seed/travelbay-news-3/800/400",
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d5/Np_sutjeska_maglic.JPG/1280px-Np_sutjeska_maglic.JPG",
                             PublishedAt = new DateTime(2026, 3, 6, 0, 0, 0, 0, DateTimeKind.Utc),
                             Title = "Nacionalni parkovi otvaraju nove staze"
                         },
@@ -1250,7 +1363,7 @@ namespace TravelBay.Services.Migrations
                             Id = 4,
                             Content = "Hercegovačka kulinarska tura ugostit će regionalni gastro festival.",
                             CreatedAt = new DateTime(2026, 3, 7, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ImageUrl = "https://picsum.photos/seed/travelbay-news-4/800/400",
+                            ImageUrl = "https://upload.wikimedia.org/wikipedia/commons/2/2b/Punjena_Paprika.JPG",
                             PublishedAt = new DateTime(2026, 3, 7, 0, 0, 0, 0, DateTimeKind.Utc),
                             Title = "Gastronomski festival u Mostaru"
                         },
@@ -1259,7 +1372,7 @@ namespace TravelBay.Services.Migrations
                             Id = 5,
                             Content = "Novi sistem preporuka pomaže korisnicima da pronađu destinacije po mjeri.",
                             CreatedAt = new DateTime(2026, 3, 9, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ImageUrl = "https://picsum.photos/seed/travelbay-news-5/800/400",
+                            ImageUrl = "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/Kotor_and_Boka_kotorska_-_view_from_city_wall.jpg/1280px-Kotor_and_Boka_kotorska_-_view_from_city_wall.jpg",
                             PublishedAt = new DateTime(2026, 3, 9, 0, 0, 0, 0, DateTimeKind.Utc),
                             Title = "TravelBay predstavlja preporuke putovanja"
                         });
@@ -1307,7 +1420,7 @@ namespace TravelBay.Services.Migrations
                             Id = 1,
                             CreatedAt = new DateTime(2026, 2, 5, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsRead = true,
-                            Message = "Vaša recenzija za Stari Most je odobrena.",
+                            Message = "Vaša recenzija destinacije Stari Most je odobrena i sada je javno vidljiva.",
                             Title = "Recenzija odobrena",
                             Type = 0,
                             UserId = 3
@@ -1317,7 +1430,7 @@ namespace TravelBay.Services.Migrations
                             Id = 2,
                             CreatedAt = new DateTime(2026, 2, 23, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsRead = false,
-                            Message = "Vaša recenzija za Vrelo Bune nije odobrena.",
+                            Message = "Vaša recenzija destinacije Vrelo Bune (Blagaj) nije objavljena. Razlog: Neprimjeren ili netačan sadržaj recenzije.",
                             Title = "Recenzija odbijena",
                             Type = 1,
                             UserId = 6
@@ -1327,7 +1440,7 @@ namespace TravelBay.Services.Migrations
                             Id = 3,
                             CreatedAt = new DateTime(2026, 3, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsRead = false,
-                            Message = "Vaša recenzija za Plažu Neum nije odobrena.",
+                            Message = "Vaša recenzija destinacije Plaža Neum nije objavljena. Razlog: Neprimjeren ili netačan sadržaj recenzije.",
                             Title = "Recenzija odbijena",
                             Type = 1,
                             UserId = 3
@@ -1347,7 +1460,7 @@ namespace TravelBay.Services.Migrations
                             Id = 5,
                             CreatedAt = new DateTime(2026, 2, 2, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsRead = true,
-                            Message = "Plan 'Sedmica u planinama BiH' je završen.",
+                            Message = "Plan 'Sedmica u planinama BiH' je sada završen.",
                             Title = "Status plana putovanja promijenjen",
                             Type = 2,
                             UserId = 5
@@ -1357,7 +1470,7 @@ namespace TravelBay.Services.Migrations
                             Id = 6,
                             CreatedAt = new DateTime(2026, 2, 8, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsRead = false,
-                            Message = "Plan 'Istraživanje nacionalnih parkova' je otkazan.",
+                            Message = "Plan 'Istraživanje nacionalnih parkova' je sada otkazan.",
                             Title = "Status plana putovanja promijenjen",
                             Type = 2,
                             UserId = 6
@@ -1400,6 +1513,26 @@ namespace TravelBay.Services.Migrations
                             Message = "Hvala što ste se pridružili TravelBay zajednici.",
                             Title = "Dobrodošli na TravelBay",
                             Type = 4,
+                            UserId = 2
+                        },
+                        new
+                        {
+                            Id = 11,
+                            CreatedAt = new DateTime(2026, 5, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsRead = true,
+                            Message = "Plan 'Vikend na Uni' je sada završen.",
+                            Title = "Status plana putovanja promijenjen",
+                            Type = 2,
+                            UserId = 2
+                        },
+                        new
+                        {
+                            Id = 12,
+                            CreatedAt = new DateTime(2026, 3, 8, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsRead = false,
+                            Message = "Vaša recenzija destinacije Vodopadi Kravica je odobrena i sada je javno vidljiva.",
+                            Title = "Recenzija odobrena",
+                            Type = 0,
                             UserId = 2
                         });
                 });
@@ -1877,6 +2010,19 @@ namespace TravelBay.Services.Migrations
                             Rating = 4,
                             Status = 0,
                             UserId = 3
+                        },
+                        new
+                        {
+                            Id = 32,
+                            Comment = "Kravica nas je oduševila, voda je bila topla i čista.",
+                            CreatedAt = new DateTime(2026, 3, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DestinationId = 11,
+                            IsDeleted = false,
+                            ModeratedAt = new DateTime(2026, 3, 8, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModeratedByUserId = 1,
+                            Rating = 5,
+                            Status = 1,
+                            UserId = 2
                         });
                 });
 
@@ -2093,6 +2239,20 @@ namespace TravelBay.Services.Migrations
                             DestinationId = 23,
                             SavedAt = new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc),
                             UserId = 7
+                        },
+                        new
+                        {
+                            Id = 21,
+                            DestinationId = 2,
+                            SavedAt = new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UserId = 2
+                        },
+                        new
+                        {
+                            Id = 22,
+                            DestinationId = 11,
+                            SavedAt = new DateTime(2026, 5, 17, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UserId = 2
                         });
                 });
 
@@ -2205,6 +2365,30 @@ namespace TravelBay.Services.Migrations
                             StartDate = new DateTime(2026, 4, 5, 0, 0, 0, 0, DateTimeKind.Utc),
                             Status = 0,
                             UserId = 3
+                        },
+                        new
+                        {
+                            Id = 7,
+                            CreatedAt = new DateTime(2026, 4, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EndDate = new DateTime(2026, 12, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDeleted = false,
+                            Name = "Zima u Hercegovini",
+                            StartDate = new DateTime(2026, 12, 11, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = 1,
+                            UpdatedAt = new DateTime(2026, 4, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UserId = 2
+                        },
+                        new
+                        {
+                            Id = 8,
+                            CreatedAt = new DateTime(2026, 4, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EndDate = new DateTime(2026, 5, 17, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDeleted = false,
+                            Name = "Vikend na Uni",
+                            StartDate = new DateTime(2026, 5, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = 2,
+                            UpdatedAt = new DateTime(2026, 5, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UserId = 2
                         });
                 });
 
@@ -2384,6 +2568,49 @@ namespace TravelBay.Services.Migrations
                             DestinationId = 9,
                             OrderIndex = 3,
                             TripPlanId = 6
+                        },
+                        new
+                        {
+                            Id = 19,
+                            DayNumber = 1,
+                            DestinationId = 1,
+                            Notes = "Šetnja Starim mostom u zoru.",
+                            OrderIndex = 1,
+                            TripPlanId = 7
+                        },
+                        new
+                        {
+                            Id = 20,
+                            DayNumber = 1,
+                            DestinationId = 3,
+                            OrderIndex = 2,
+                            TripPlanId = 7
+                        },
+                        new
+                        {
+                            Id = 21,
+                            DayNumber = 2,
+                            DestinationId = 13,
+                            Notes = "Ručak uz Vrelo Bune.",
+                            OrderIndex = 1,
+                            TripPlanId = 7
+                        },
+                        new
+                        {
+                            Id = 22,
+                            DayNumber = 1,
+                            DestinationId = 12,
+                            Notes = "Rafting na Uni.",
+                            OrderIndex = 1,
+                            TripPlanId = 8
+                        },
+                        new
+                        {
+                            Id = 23,
+                            DayNumber = 2,
+                            DestinationId = 15,
+                            OrderIndex = 1,
+                            TripPlanId = 8
                         });
                 });
 
@@ -2633,6 +2860,18 @@ namespace TravelBay.Services.Migrations
                             Id = 12,
                             CategoryId = 5,
                             UserId = 7
+                        },
+                        new
+                        {
+                            Id = 13,
+                            CategoryId = 3,
+                            UserId = 2
+                        },
+                        new
+                        {
+                            Id = 14,
+                            CategoryId = 5,
+                            UserId = 2
                         });
                 });
 
@@ -2983,6 +3222,41 @@ namespace TravelBay.Services.Migrations
                             DestinationId = 16,
                             UserId = 7,
                             ViewedAt = new DateTime(2026, 2, 2, 12, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 36,
+                            DestinationId = 1,
+                            UserId = 2,
+                            ViewedAt = new DateTime(2026, 4, 29, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 37,
+                            DestinationId = 11,
+                            UserId = 2,
+                            ViewedAt = new DateTime(2026, 4, 29, 6, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 38,
+                            DestinationId = 13,
+                            UserId = 2,
+                            ViewedAt = new DateTime(2026, 4, 29, 12, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 39,
+                            DestinationId = 3,
+                            UserId = 2,
+                            ViewedAt = new DateTime(2026, 4, 29, 18, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 40,
+                            DestinationId = 12,
+                            UserId = 2,
+                            ViewedAt = new DateTime(2026, 4, 30, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
 

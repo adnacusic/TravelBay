@@ -42,6 +42,8 @@ ACCEPTED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp"}
 # Same limits as the DestinationImages columns.
 MAX_IMAGE_URL_LENGTH = 500
 MAX_SOURCE_LENGTH = 200
+# Longer "Artist" values are notes, not names (see _source).
+MAX_ARTIST_LENGTH = 60
 SOURCE_NAME = "Wikimedia Commons"
 
 _TAGS = re.compile(r"<[^>]+>")
@@ -107,9 +109,14 @@ def _plain(metadata: dict, field: str) -> str:
     return " ".join(_TAGS.sub("", str(value)).split())
 
 
-def _source(metadata: dict) -> str:
-    """e.g. "Wikimedia Commons · CC BY-SA 3.0 · Pudelek (Marcin Szala)" — license and author for attribution."""
-    parts = [SOURCE_NAME, _plain(metadata, "LicenseShortName"), _plain(metadata, "Artist")]
+def _source(metadata: dict, uploader: str) -> str:
+    """e.g. "Wikimedia Commons · CC BY-SA 3.0 · Pudelek (Marcin Szala)" — license and author for attribution.
+    Some files put a note ("I would appreciate being notified…") in the Artist field; then the
+    uploader's user name is the author."""
+    artist = _plain(metadata, "Artist")
+    if not artist or len(artist) > MAX_ARTIST_LENGTH:
+        artist = uploader
+    parts = [SOURCE_NAME, _plain(metadata, "LicenseShortName"), artist]
     return " · ".join(p for p in parts if p)[:MAX_SOURCE_LENGTH]
 
 
@@ -134,7 +141,7 @@ def _search_images(query: str) -> list[dict]:
             "gsrnamespace": 6,  # File: pages
             "gsrlimit": RESULTS_PER_QUERY,
             "prop": "imageinfo",
-            "iiprop": "url|mime|extmetadata",
+            "iiprop": "url|mime|user|extmetadata",
             "iiurlwidth": THUMBNAIL_WIDTH,
             "iiextmetadatafilter": "LicenseShortName|Artist|ObjectName|ImageDescription|Categories",
         },
@@ -162,7 +169,7 @@ def _candidates(pages: list[dict], terms: DestinationTerms, query: str, used: se
         details = " ".join(_plain(metadata, f) for f in ("ObjectName", "ImageDescription", "Categories"))
         relevance = judge(terms, title, details)
         if relevance.match != Match.MISS:
-            result.append(Candidate(url, _source(metadata), title, query, relevance))
+            result.append(Candidate(url, _source(metadata, info.get("user", "")), title, query, relevance))
     return result
 
 

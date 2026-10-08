@@ -4,6 +4,7 @@ using TravelBay.Model.Responses;
 using TravelBay.Services;
 using TravelBay.Services.Database;
 using TravelBay.Services.Hubs;
+using TravelBay.Services.Messaging;
 using TravelBay.Services.Reports;
 using TravelBay.Services.Validators;
 using TravelBay.WebAPI.Filters;
@@ -142,6 +143,20 @@ builder.Services.AddScoped<IReportService, ReportService>();
 
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IRecommendationService, RecommendationService>();
+
+// RabbitMQ: the API only publishes AI agent jobs; the Python worker container consumes them.
+// RABBITMQ_HOST is "localhost" on the host machine; docker-compose overrides it with the service name.
+var rabbitMqSettings = new RabbitMqSettings
+{
+    HostName = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? "localhost",
+    Port = int.TryParse(Environment.GetEnvironmentVariable("RABBITMQ_PORT"), out var rabbitMqPort) ? rabbitMqPort : 5672,
+    UserName = Environment.GetEnvironmentVariable("RABBITMQ_DEFAULT_USER") ?? string.Empty,
+    Password = Environment.GetEnvironmentVariable("RABBITMQ_DEFAULT_PASS") ?? string.Empty
+};
+builder.Services.AddSingleton(rabbitMqSettings);
+builder.Services.AddSingleton<RabbitMqConnectionProvider>();
+builder.Services.AddScoped<IAiAgentQueuePublisher, AiAgentQueuePublisher>();
+builder.Services.AddScoped<IAiAgentService, AiAgentService>();
 
 builder.Services.AddScoped<IValidator<DestinationInsertRequest>, DestinationInsertValidator>();
 builder.Services.AddScoped<IValidator<DestinationUpdateRequest>, DestinationUpdateValidator>();

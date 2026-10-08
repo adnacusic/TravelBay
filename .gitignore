@@ -54,3 +54,8 @@ Thumbs.db
 CLAUDE.md
 _odbrana/
 rsII_exam_template_2025_26-main.zip
+
+## Python (TravelBay.Worker)
+__pycache__/
+*.pyc
+.venv/

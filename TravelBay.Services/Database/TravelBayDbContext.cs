@@ -34,6 +34,7 @@ namespace TravelBay.Services.Database
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<News> News { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<AiAgentRun> AiAgentRuns { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

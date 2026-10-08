@@ -198,6 +198,16 @@ namespace TravelBay.Services.Database
                 .WithMany()
                 .HasForeignKey(a => a.PerformedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // ----- AiAgentRun -----
+            modelBuilder.Entity<AiAgentRun>()
+                .HasOne(r => r.RequestedByUser)
+                .WithMany()
+                .HasForeignKey(r => r.RequestedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<AiAgentRun>()
+                .HasIndex(r => new { r.AgentType, r.Status });
         }
     }
 }

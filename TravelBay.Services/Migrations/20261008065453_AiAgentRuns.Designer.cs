@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TravelBay.Services.Database;
 
@@ -11,9 +12,11 @@ using TravelBay.Services.Database;
 namespace TravelBay.Services.Migrations
 {
     [DbContext(typeof(TravelBayDbContext))]
-    partial class TravelBayDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261008065453_AiAgentRuns")]
+    partial class AiAgentRuns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

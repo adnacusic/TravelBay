@@ -168,6 +168,18 @@
 |---|---|---|---|
 | GET | `/AuditLogs` | Admin | Pregled audit traga, filter `EntityName`/`EntityId`, paginirano. **Samo čitanje** — upisuju isključivo state machine servisi interno. |
 
+### AiAgentsController — `/AiAgents` (Faza 6, Admin)
+Pokretanje AI agenata samo objavljuje poruku na RabbitMQ red `travelbay.ai-agents`
+(`{"command":"GenerateKeywords"|"FindImages","runId":N}`, durable + persistent). Obradu radi
+**odvojeni kontejner `worker`** (`TravelBay.Worker`, Python), koji napredak upisuje u `AiAgentRuns`.
+| Metoda | Ruta | Auth | Opis |
+|---|---|---|---|
+| GET | `/AiAgents/Status` | Admin | Broj destinacija bez ključnih riječi / bez slike + zadnji run svakog agenta |
+| POST | `/AiAgents/Keywords/Run` | Admin | Pokreće AIAgentKeywords (Groq); 409 ako već radi ili nema šta obraditi |
+| POST | `/AiAgents/Images/Run` | Admin | Pokreće AIAgentSlike (Google Custom Search); 409 ako već radi ili nema šta obraditi |
+| GET | `/AiAgents/Runs` | Admin | Historija pokretanja, paginirano, filter `AgentType` |
+| GET | `/AiAgents/Runs/{id}` | Admin | Jedan run: status (Queued → Running → Completed/Failed), brojači, log |
+
 ### NotificationHub (SignalR) — `/hubs/notifications` (NOVO)
 - Zahtijeva JWT (token preko query stringa pri konekciji — standardni SignalR obrazac za WS).
 - Server pri konekciji pridružuje vezu u grupu `user-{userId}` (iz JWT claim-a, nikad iz query parametra).

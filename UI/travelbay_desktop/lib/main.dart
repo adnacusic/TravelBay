@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'providers/ai_agent_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/category_provider.dart';
 import 'providers/city_provider.dart';
@@ -31,6 +32,7 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
+        ChangeNotifierProvider(create: (_) => AiAgentProvider()),
         ChangeNotifierProvider(create: (_) => DestinationProvider()),
         ChangeNotifierProvider(create: (_) => DestinationImageProvider()),
         ChangeNotifierProvider(create: (_) => CategoryProvider()),

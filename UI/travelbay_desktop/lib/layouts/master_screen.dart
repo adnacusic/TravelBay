@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
+import '../screens/ai_agents/ai_agents_screen.dart';
 import '../screens/categories/category_list_screen.dart';
 import '../screens/dashboard_screen.dart';
 import '../screens/destinations/destination_list_screen.dart';
@@ -33,17 +34,13 @@ class _MenuEntry {
     this.section,
     this.label,
     this.icon, {
-    this.builder,
-    this.unavailableReason,
+    required this.builder,
   });
 
   final AdminSection section;
   final String label;
   final IconData icon;
-
-  /// Null while the module is not available; [unavailableReason] then explains why.
-  final Widget Function()? builder;
-  final String? unavailableReason;
+  final Widget Function() builder;
 }
 
 final _menu = <_MenuEntry>[
@@ -95,12 +92,11 @@ final _menu = <_MenuEntry>[
     Icons.picture_as_pdf_outlined,
     builder: () => const ReportScreen(),
   ),
-  const _MenuEntry(
+  _MenuEntry(
     AdminSection.aiAgents,
     'AI Agenti',
     Icons.smart_toy_outlined,
-    unavailableReason:
-        'Uskoro: AI agenti za ključne riječi i slike dolaze s AI worker servisom.',
+    builder: () => const AiAgentsScreen(),
   ),
   _MenuEntry(
     AdminSection.profile,
@@ -245,24 +241,14 @@ class _SideMenu extends StatelessWidget {
   }
 
   Widget _buildEntry(BuildContext context, _MenuEntry entry) {
-    final builder = entry.builder;
-    final tile = ListTile(
+    return ListTile(
       leading: Icon(entry.icon),
       title: Text(entry.label),
-      enabled: builder != null,
       selected: entry.section == selected,
       selectedTileColor: Theme.of(context).colorScheme.secondaryContainer,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      trailing: builder == null
-          ? Text('uskoro', style: Theme.of(context).textTheme.labelSmall)
-          : null,
-      onTap: builder == null || entry.section == selected
-          ? null
-          : () => openSection(context, builder()),
+      onTap: entry.section == selected ? null : () => openSection(context, entry.builder()),
     );
-
-    final reason = entry.unavailableReason;
-    return reason == null ? tile : Tooltip(message: reason, child: tile);
   }
 
   Future<void> _logout(BuildContext context) async {

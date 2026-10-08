@@ -1,6 +1,8 @@
-"""AIAgentKeywords: Groq (Llama 3.1) writes 3-5 English keywords for every destination whose
-Keywords is still empty. Stored comma-separated in Destinations.Keywords; the clients split on commas,
-and the first keyword (name + place) is the image search query of AIAgentSlike."""
+"""AIAgentKeywords: a Groq-hosted LLM (GROQ_MODEL, openai/gpt-oss-20b) writes 3-5 English keywords
+for every destination whose Keywords is still empty. The original agent used Llama 3.1
+(llama-3.1-8b-instant), which Groq has retired (404 model_not_found).
+Stored comma-separated in Destinations.Keywords; the clients split on commas, and the first keyword
+(name + place) is the image search query of AIAgentSlike."""
 
 import json
 import re
@@ -111,24 +113,30 @@ def run(conn: pymssql.Connection, settings: Settings, reporter: RunReporter) -> 
 
     client = groq.Groq(api_key=settings.groq_api_key)
     for index, destination in enumerate(destinations):
-        name = destination["Name"]
-        try:
-            content = _ask_groq(client, settings.groq_model, destination)
-        except groq.AuthenticationError as ex:
-            raise FatalAgentError("Groq je odbio GROQ_API_KEY (neispravan ključ).") from ex
-        except groq.APIError as ex:
-            reporter.log(f"Greška za {name}: Groq poziv nije uspio ({ex.__class__.__name__}).")
-            reporter.item_done(success=False)
-            continue
-
-        keywords = parse_keywords(content)
-        if len(keywords) < MIN_KEYWORDS:
-            reporter.log(f"Greška za {name}: model nije vratio bar {MIN_KEYWORDS} ključne riječi (odgovor: {content[:120]!r}).")
-            reporter.item_done(success=False)
-        else:
-            _save(conn, destination["Id"], keywords)
-            reporter.log(f"{name}: {', '.join(keywords)}")
-            reporter.item_done(success=True)
-
-        if index < len(destinations) - 1:
+        if index > 0:
             time.sleep(PAUSE_SECONDS)
+        _process(conn, client, settings.groq_model, destination, reporter)
+
+
+def _process(conn: pymssql.Connection, client: groq.Groq, model: str, destination: dict, reporter: RunReporter) -> None:
+    name = destination["Name"]
+    try:
+        content = _ask_groq(client, model, destination)
+    except groq.AuthenticationError as ex:
+        raise FatalAgentError("Groq je odbio GROQ_API_KEY (neispravan ključ).") from ex
+    except groq.NotFoundError as ex:
+        raise FatalAgentError(f"Model '{model}' ne postoji na Groq-u — promijenite GROQ_MODEL u .env.") from ex
+    except groq.APIError as ex:
+        reporter.log(f"Greška za {name}: Groq poziv nije uspio ({ex.__class__.__name__}).")
+        reporter.item_done(success=False)
+        return
+
+    keywords = parse_keywords(content)
+    if len(keywords) < MIN_KEYWORDS:
+        reporter.log(f"Greška za {name}: model nije vratio bar {MIN_KEYWORDS} ključne riječi (odgovor: {content[:120]!r}).")
+        reporter.item_done(success=False)
+        return
+
+    _save(conn, destination["Id"], keywords)
+    reporter.log(f"{name}: {', '.join(keywords)}")
+    reporter.item_done(success=True)

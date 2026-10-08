@@ -1,8 +1,15 @@
-"""AIAgentSlike: Google Custom Search (image search) finds a picture for every destination that has no
-image yet. The query is the first AI keyword (or name + city when there are none); the URL and the
-source site are stored in DestinationImages with IsAiGenerated = 1."""
+"""AIAgentSlike: finds a free picture on Wikimedia Commons for every destination that has no image
+yet, and stores its URL and source in DestinationImages with IsAiGenerated = 1.
 
+The query is the first AI keyword (name + place). If Commons has nothing for it, shorter queries
+follow: name + city, then the name alone. The agent originally used Google Custom Search, but Google
+closed the Custom Search JSON API to new projects (403 PERMISSION_DENIED "This project does not have
+the access to Custom Search JSON API"); Commons needs no key or billing and its images are freely
+licensed. The logic is the same, only the image source changed."""
+
+import re
 import time
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import pymssql
 import requests
@@ -11,18 +18,30 @@ from ..config import Settings
 from ..runs import RunReporter
 from . import FatalAgentError
 
-SEARCH_URL = "https://www.googleapis.com/customsearch/v1"
-RESULTS_PER_QUERY = 3
+SEARCH_URL = "https://commons.wikimedia.org/w/api.php"
+# Wikimedia's API policy asks every client to identify itself with a descriptive User-Agent.
+USER_AGENT = "TravelBay-Worker/1.0 (RS2 student project; https://github.com/adnacusic/TravelBay)"
+RESULTS_PER_QUERY = 5
+THUMBNAIL_WIDTH = 1280
 REQUEST_TIMEOUT_SECONDS = 20
+
+# Photos only (no GIF flags/maps, no SVG drawings).
+ACCEPTED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
 # Same limits as the DestinationImages columns.
 MAX_IMAGE_URL_LENGTH = 500
 MAX_SOURCE_LENGTH = 200
-DEFAULT_SOURCE = "Google Custom Search"
+SOURCE_NAME = "Wikimedia Commons"
 
-# Google answers 400/403 for a wrong key or engine id and for an exhausted daily quota:
-# every further call would fail the same way, so the run stops.
-FATAL_STATUS_CODES = {400, 401, 403}
+_TAGS = re.compile(r"<[^>]+>")
+_TRACKING_PREFIX = "utm_"
+
+
+def _without_tracking(url: str) -> str:
+    """Commons adds utm_* parameters to unscaled image URLs; the image itself does not need them."""
+    parts = urlsplit(url)
+    query = [(k, v) for k, v in parse_qsl(parts.query) if not k.startswith(_TRACKING_PREFIX)]
+    return urlunsplit(parts._replace(query=urlencode(query)))
 
 
 def _pending_destinations(conn: pymssql.Connection) -> list[dict]:
@@ -38,36 +57,61 @@ def _pending_destinations(conn: pymssql.Connection) -> list[dict]:
         return cursor.fetchall()
 
 
-def search_query(destination: dict) -> str:
+def search_queries(destination: dict) -> list[str]:
+    """First AI keyword first, then shorter fallbacks; duplicates removed, order kept."""
     keywords = [k.strip() for k in (destination["Keywords"] or "").split(",") if k.strip()]
-    return keywords[0] if keywords else f"{destination['Name']} {destination['City']}"
+    candidates = [
+        keywords[0] if keywords else "",
+        f"{destination['Name']} {destination['City']}",
+        destination["Name"],
+    ]
+    queries: list[str] = []
+    for query in candidates:
+        if query and query.lower() not in (q.lower() for q in queries):
+            queries.append(query)
+    return queries
 
 
-def _search_image(settings: Settings, query: str) -> tuple[str, str] | None:
+def _plain(metadata: dict, field: str) -> str:
+    value = metadata.get(field, {}).get("value", "")
+    return " ".join(_TAGS.sub("", str(value)).split())
+
+
+def _source(metadata: dict) -> str:
+    """e.g. "Wikimedia Commons · CC BY-SA 3.0 · Pudelek (Marcin Szala)" — license and author for attribution."""
+    parts = [SOURCE_NAME, _plain(metadata, "LicenseShortName"), _plain(metadata, "Artist")]
+    return " · ".join(p for p in parts if p)[:MAX_SOURCE_LENGTH]
+
+
+def _search_image(query: str) -> tuple[str, str] | None:
     response = requests.get(
         SEARCH_URL,
         params={
-            "key": settings.google_api_key,
-            "cx": settings.google_cx_id,
-            "q": query,
-            "searchType": "image",
-            "num": RESULTS_PER_QUERY,
-            "safe": "active",
+            "action": "query",
+            "format": "json",
+            "formatversion": 2,
+            "generator": "search",
+            "gsrsearch": f"{query} filetype:bitmap",
+            "gsrnamespace": 6,  # File: pages
+            "gsrlimit": RESULTS_PER_QUERY,
+            "prop": "imageinfo",
+            "iiprop": "url|mime|extmetadata",
+            "iiurlwidth": THUMBNAIL_WIDTH,
+            "iiextmetadatafilter": "LicenseShortName|Artist",
         },
+        headers={"User-Agent": USER_AGENT},
         timeout=REQUEST_TIMEOUT_SECONDS,
     )
-    if response.status_code in FATAL_STATUS_CODES:
-        raise FatalAgentError(
-            f"Google Custom Search je odbio zahtjev (HTTP {response.status_code}) — "
-            "provjerite GOOGLE_API_KEY, GOOGLE_CX_ID i dnevnu kvotu."
-        )
+    if response.status_code == 403:
+        raise FatalAgentError("Wikimedia Commons je odbio zahtjev (HTTP 403) — provjerite User-Agent workera.")
     response.raise_for_status()
 
-    for item in response.json().get("items", []):
-        link = item.get("link", "")
-        if link.startswith(("http://", "https://")) and len(link) <= MAX_IMAGE_URL_LENGTH:
-            source = (item.get("displayLink") or DEFAULT_SOURCE)[:MAX_SOURCE_LENGTH]
-            return link, source
+    pages = response.json().get("query", {}).get("pages", [])
+    for page in sorted(pages, key=lambda p: p.get("index", 0)):
+        info = (page.get("imageinfo") or [{}])[0]
+        url = _without_tracking(info.get("thumburl") or info.get("url", ""))
+        if info.get("mime") in ACCEPTED_MIME_TYPES and url.startswith("https://") and len(url) <= MAX_IMAGE_URL_LENGTH:
+            return url, _source(info.get("extmetadata", {}))
     return None
 
 
@@ -85,36 +129,49 @@ def _save(conn: pymssql.Connection, destination_id: int, image_url: str, source:
     return inserted
 
 
-def run(conn: pymssql.Connection, settings: Settings, reporter: RunReporter) -> None:
-    if not settings.google_api_key or not settings.google_cx_id:
-        raise FatalAgentError("GOOGLE_API_KEY ili GOOGLE_CX_ID nije postavljen u .env — AIAgentSlike ne može raditi.")
+def _find(settings: Settings, queries: list[str]) -> tuple[str, tuple[str, str]] | None:
+    """The first query with a usable image, paced like every other API call."""
+    for attempt, query in enumerate(queries):
+        if attempt > 0:
+            time.sleep(settings.image_search_delay_seconds)
+        found = _search_image(query)
+        if found is not None:
+            return query, found
+    return None
 
+
+def _process(conn: pymssql.Connection, settings: Settings, destination: dict, reporter: RunReporter) -> None:
+    name = destination["Name"]
+    queries = search_queries(destination)
+    try:
+        result = _find(settings, queries)
+    except requests.RequestException as ex:
+        reporter.log(f"Greška za {name}: pretraga nije uspjela ({ex.__class__.__name__}).")
+        reporter.item_done(success=False)
+        return
+
+    if result is None:
+        reporter.log(f"{name}: nema slike na Wikimedia Commons (upiti: {' | '.join(queries)}).")
+        reporter.item_done(success=False)
+        return
+
+    query, (image_url, source) = result
+    if _save(conn, destination["Id"], image_url, source):
+        reporter.log(f"{name}: slika za '{query}' — {source}.")
+    else:
+        reporter.log(f"{name}: u međuvremenu je dodana slika, preskočeno.")
+    reporter.item_done(success=True)
+
+
+def run(conn: pymssql.Connection, settings: Settings, reporter: RunReporter) -> None:
     destinations = _pending_destinations(conn)
     reporter.start(len(destinations))
     reporter.log(
-        f"AIAgentSlike: {len(destinations)} destinacija bez slike "
+        f"AIAgentSlike: {len(destinations)} destinacija bez slike, izvor {SOURCE_NAME} "
         f"(pauza {settings.image_search_delay_seconds:g} s između poziva)."
     )
 
     for index, destination in enumerate(destinations):
-        name = destination["Name"]
-        query = search_query(destination)
-        try:
-            found = _search_image(settings, query)
-        except requests.RequestException as ex:
-            reporter.log(f"Greška za {name}: pretraga '{query}' nije uspjela ({ex.__class__.__name__}).")
-            reporter.item_done(success=False)
-            found = None
-        else:
-            if found is None:
-                reporter.log(f"{name}: nema rezultata za '{query}'.")
-                reporter.item_done(success=False)
-            elif _save(conn, destination["Id"], *found):
-                reporter.log(f"{name}: slika sa {found[1]} (upit '{query}').")
-                reporter.item_done(success=True)
-            else:
-                reporter.log(f"{name}: u međuvremenu je dodana slika, preskočeno.")
-                reporter.item_done(success=True)
-
-        if index < len(destinations) - 1:
+        if index > 0:
             time.sleep(settings.image_search_delay_seconds)
+        _process(conn, settings, destination, reporter)

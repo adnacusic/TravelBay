@@ -39,12 +39,10 @@ class Settings:
     rabbitmq_user: str
     rabbitmq_password: str
 
-    # Checked only when the matching agent runs, so a missing key fails that run with a clear
-    # log line instead of stopping the whole worker.
+    # Checked only when the keywords agent runs, so a missing key fails that run with a clear
+    # log line instead of stopping the whole worker. The image agent (Wikimedia Commons) needs no key.
     groq_api_key: str
     groq_model: str
-    google_api_key: str
-    google_cx_id: str
     image_search_delay_seconds: float
 
 
@@ -65,7 +63,5 @@ def load_settings() -> Settings:
         rabbitmq_password=_required("RABBITMQ_DEFAULT_PASS"),
         groq_api_key=_optional("GROQ_API_KEY"),
         groq_model=_required("GROQ_MODEL"),
-        google_api_key=_optional("GOOGLE_API_KEY"),
-        google_cx_id=_optional("GOOGLE_CX_ID"),
         image_search_delay_seconds=float(_required("IMAGE_SEARCH_DELAY_SECONDS")),
     )

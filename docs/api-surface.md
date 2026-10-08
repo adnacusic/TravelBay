@@ -176,7 +176,7 @@ Pokretanje AI agenata samo objavljuje poruku na RabbitMQ red `travelbay.ai-agent
 |---|---|---|---|
 | GET | `/AiAgents/Status` | Admin | Broj destinacija bez ključnih riječi / bez slike + zadnji run svakog agenta |
 | POST | `/AiAgents/Keywords/Run` | Admin | Pokreće AIAgentKeywords (Groq); 409 ako već radi ili nema šta obraditi |
-| POST | `/AiAgents/Images/Run` | Admin | Pokreće AIAgentSlike (Google Custom Search); 409 ako već radi ili nema šta obraditi |
+| POST | `/AiAgents/Images/Run` | Admin | Pokreće AIAgentSlike (Wikimedia Commons, slobodne slike); 409 ako već radi ili nema šta obraditi |
 | GET | `/AiAgents/Runs` | Admin | Historija pokretanja, paginirano, filter `AgentType` |
 | GET | `/AiAgents/Runs/{id}` | Admin | Jedan run: status (Queued → Running → Completed/Failed), brojači, log |
 

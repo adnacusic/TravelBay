@@ -1,6 +1,6 @@
 """RabbitMQ consumer: one job at a time from the durable queue, acknowledged only after the run is
 written to the database. A job runs in its own thread so pika keeps answering broker heartbeats
-during long runs (the image agent pauses between Google calls)."""
+during long runs (the image agent pauses between Wikimedia Commons calls)."""
 
 import functools
 import json

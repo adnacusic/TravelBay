@@ -35,7 +35,7 @@ enum AiAgentType {
   @JsonValue(0)
   keywords('AIAgentKeywords', 'Groq LLM generiše 3–5 ključnih riječi za destinacije koje ih nemaju.'),
   @JsonValue(1)
-  images('AIAgentSlike', 'Google Custom Search pronalazi sliku za destinacije koje nemaju nijednu.');
+  images('AIAgentSlike', 'Pronalazi slobodnu sliku na Wikimedia Commons za destinacije koje nemaju nijednu.');
 
   const AiAgentType(this.label, this.description);
   final String label;

@@ -74,7 +74,7 @@ def _password_reset_email(sender: str, to: str, first_name: str, code: str, vali
 
 def _send(settings: Settings, email: EmailMessage) -> None:
     """SMTP_USE_SSL=true: implicit TLS (usually port 465); otherwise STARTTLS when the server offers it
-    (e.g. Mailtrap sandbox on 2525/587)."""
+    (the local Mailpit container on 1025 offers neither, so the mail goes in plain SMTP on the Docker network)."""
     context = ssl.create_default_context()
     if settings.smtp_use_ssl:
         server: smtplib.SMTP = smtplib.SMTP_SSL(

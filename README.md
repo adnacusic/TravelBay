@@ -25,7 +25,8 @@ preporuke s objašnjenjem i AI obogaćivanje sadržaja (ključne riječi i slike
 | AI | Groq (`openai/gpt-oss-20b`) za ključne riječi, Wikimedia Commons API za slike |
 | Klijenti | Flutter (desktop Windows + mobilna Android), provider pattern |
 
-Arhitektura u Dockeru (`docker-compose.yml`): `sqlserver`, `rabbitmq`, `api`, `worker`.
+Arhitektura u Dockeru (`docker-compose.yml`): `sqlserver`, `rabbitmq`, `api`, `worker`, `mailpit`
+(lokalni hvatač emailova).
 API objavljuje poslove na RabbitMQ (`travelbay.ai-agents`, `travelbay.emails`), worker ih obrađuje
 i piše rezultat u istu bazu. Detalji: `docs/domain-model.md`, `docs/api-surface.md`,
 `recommender-dokumentacija.md`.
@@ -49,7 +50,8 @@ i piše rezultat u istu bazu. Detalji: `docs/domain-model.md`, `docs/api-surface
 
    Ništa se ne pokreće ručno: API pri startu sam kreira bazu `220042`, primijeni migracije i seed
    podatke (prvi start traje ~1 min dok se SQL Server ne podigne). Provjera: `docker compose ps`
-   (4 servisa `Up`), API na `http://localhost:8080`, RabbitMQ konzola na `http://localhost:15672`.
+   (5 servisa `Up`), API na `http://localhost:8080`, RabbitMQ konzola na `http://localhost:15672`,
+   Mailpit inbox (emailovi aplikacije) na `http://localhost:8025`.
    Dokumentacija API-ja (u Development okruženju iz `.env`): `http://localhost:8080/swagger` i
    `http://localhost:8080/scalar/v1`.
 
@@ -106,6 +108,10 @@ bez slike, pa pokrenite AIAgentKeywords, zatim AIAgentSlike.
 Na ekranu prijave "Zaboravljena lozinka?" → email računa → kod od 6 cifara stiže emailom (šalje ga
 worker preko SMTP-a iz `.env`) → unos koda i nove lozinke. Kod vrijedi 15 minuta, jednokratan je i
 zaključava se nakon 5 pogrešnih pokušaja. Ako SMTP nije podešen u `.env`, aplikacija to jasno javlja.
+
+Emailovi ne idu na stvarne adrese: SMTP u `.env` pokazuje na kontejner **Mailpit** (`SMTP_HOST=mailpit`,
+`SMTP_PORT=1025`), koji hvata svaku poruku. Kod se čita u web inboxu **http://localhost:8025**
+(npr. za korisnika `mobile`: email `mobile@travelbay.local`). Radi offline, bez ikakvog naloga.
 
 ## Napomene o odstupanjima od prijave
 

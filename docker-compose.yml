@@ -28,6 +28,14 @@ services:
     volumes:
       - travelbay_rabbitmq_data:/var/lib/rabbitmq
 
+  # Local mail catcher: receives every email the worker sends (password reset codes) and shows them
+  # in a web inbox, so the flow works offline without an external SMTP account.
+  mailpit:
+    image: axllent/mailpit:v1.28.0
+    container_name: travelbay-mailpit
+    ports:
+      - "${MAILPIT_WEB_PORT}:8025"
+
   api:
     build:
       context: .
@@ -67,6 +75,8 @@ services:
       sqlserver:
         condition: service_healthy
       rabbitmq:
+        condition: service_started
+      mailpit:
         condition: service_started
     restart: unless-stopped
 

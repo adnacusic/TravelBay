@@ -24,9 +24,12 @@
 ### AccessController — `/Access`
 | Metoda | Ruta | Auth | Opis |
 |---|---|---|---|
-| POST | `/Access/Register` | Public | Registracija; dodjeljuje rolu `User` serverski, ne prima role/isAdmin |
-| POST | `/Access/Login` | Public | Login, vraća access+refresh token |
-| POST | `/Access/LoginWithRefreshToken` | Public | Obnova tokena |
+| POST | `/Access/Register` | Public | Registracija (`UserRegisterRequest`): uvijek aktivan račun s rolom `User`, bez slike — ne prima role/isAdmin/IsActive/ProfileImageId |
+| POST | `/Access/Login` | Public | Login, vraća access (JWT s `jti`) + refresh token |
+| POST | `/Access/LoginWithRefreshToken` | Public | Obnova tokena (refresh token se rotira) |
+| POST | `/Access/Logout` | Auth | Briše refresh tokene korisnika i stavlja `jti` access tokena na listu opozvanih do isteka (`OnTokenValidated` ga odbija) |
+| POST | `/Access/ForgotPassword` | Public | Kod od 6 cifara (`RandomNumberGenerator`, čuva se samo PBKDF2 hash, 15 min, jednokratan, 5 pokušaja) → RabbitMQ `travelbay.emails` → worker šalje SMTP email. Isti odgovor i za nepostojeći email; bez SMTP-a u .env → 409 s jasnom porukom |
+| POST | `/Access/ResetPassword` | Public | Email + kod + nova lozinka; uspjeh odjavljuje sve sesije |
 
 ### UsersController — `/Users`
 | Metoda | Ruta | Auth | Current-user / Admin | Opis |
@@ -180,21 +183,19 @@ Pokretanje AI agenata samo objavljuje poruku na RabbitMQ red `travelbay.ai-agent
 | GET | `/AiAgents/Runs` | Admin | Historija pokretanja, paginirano, filter `AgentType` |
 | GET | `/AiAgents/Runs/{id}` | Admin | Jedan run: status (Queued → Running → Completed/Failed), brojači, log |
 
-### NotificationHub (SignalR) — `/hubs/notifications` (NOVO)
-- Zahtijeva JWT (token preko query stringa pri konekciji — standardni SignalR obrazac za WS).
-- Server pri konekciji pridružuje vezu u grupu `user-{userId}` (iz JWT claim-a, nikad iz query parametra).
-- Servisi koji kreiraju `Notification` (Review/TripPlan state machine, eventualno News) nakon upisa u
-  bazu pozivaju `Clients.Group($"user-{userId}").SendAsync("ReceiveNotification", dto)`.
-- REST (`GET /Notifications`) ostaje kao fallback/početno punjenje liste; auto-refresh na klijentu je Faza 5/6.
+### Notifikacije u realnom vremenu
+Mobilna aplikacija koristi **polling** `GET /Notifications?isRead=false&pageSize=1&includeTotalCount=true`
+(mobilna svakih 15 s), pa SignalR hub nije potreban i uklonjen je (nema ni JWT-a u query stringu).
 
 ## 2. State machine — Review
 
 | Iz | U | Ko | Šta se dešava pri prelazu |
 |---|---|---|---|
-| Pending | Approved | Admin | `ModeratedByUserId`=admin, `ModeratedAt`=UtcNow; `AuditLog` ("Review", id, "Approved"); `Notification` autoru (`ReviewApproved`) + SignalR push |
+| Pending | Approved | Admin | `ModeratedByUserId`=admin, `ModeratedAt`=UtcNow; `AuditLog` ("Review", id, "Approved"); `Notification` autoru (`ReviewApproved`) — sve u jednom `SaveChanges` |
 | Pending | Rejected | Admin | Isto + OBAVEZAN `ModerationReason` (prazan → 400 validacija prije state machine); `Notification` (`ReviewRejected`) |
-| Approved | * | — | Nedozvoljeno → `BusinessException` ("Review already moderated") |
-| Rejected | * | — | Nedozvoljeno → `BusinessException` |
+| Approved | * | — | Nova moderacija nedozvoljena → `BusinessException` |
+| Approved | Pending | Autor (izmjena teksta/ocjene) | `PrepareForEdit`: moderacija se poništava, `AuditLog` "ResubmittedAfterEdit" — izmijenjeni tekst se ponovo moderira |
+| Rejected | * | — | Nedozvoljeno → `BusinessException`; izmjena odbijene recenzije također ("napišite novu") |
 
 ## 3. State machine — TripPlan
 

@@ -10,7 +10,7 @@ preporuke s objašnjenjem i AI obogaćivanje sadržaja (ključne riječi i slike
   moderacija recenzija, kategorije, države i gradovi, novosti, PDF izvještaji, AI agenti.
 - **Mobilna aplikacija (Android)** — korisnik: početna s preporukama, pretraga (naziv, mjesto,
   kategorija, ocjena), detalji (recenzije, sačuvaj, kolekcija, plan, dijeljenje), putovanja,
-  sačuvano/kolekcije, profil (podaci, slika, preferencije, historija, lozinka), notifikacije,
+  sačuvano/kolekcije, novosti, profil (podaci, slika, preferencije, historija, lozinka), notifikacije,
   zaboravljena lozinka.
 
 ## Tehnologije

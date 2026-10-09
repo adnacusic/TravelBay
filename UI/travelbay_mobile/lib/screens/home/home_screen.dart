@@ -3,10 +3,12 @@ import 'package:provider/provider.dart';
 
 import '../../models/category.dart';
 import '../../models/destination.dart';
+import '../../models/news.dart';
 import '../../models/recommendation.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/destination_provider.dart';
+import '../../providers/news_provider.dart';
 import '../../providers/recommendation_provider.dart';
 import '../../utils/app_navigator.dart';
 import '../../utils/category_icons.dart';
@@ -14,8 +16,11 @@ import '../../widgets/destination_widgets.dart';
 import '../../widgets/network_thumbnail.dart';
 import '../../widgets/notification_bell.dart';
 import '../destination/destination_details_screen.dart';
+import '../news/news_details_screen.dart';
+import '../news/news_list_screen.dart';
+import '../news/news_widgets.dart';
 
-/// Start tab: personal recommendations, quick category access and popular destinations.
+/// Start tab: personal recommendations, quick category access, popular destinations and the latest news.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.onOpenCategory, required this.activation});
 
@@ -34,10 +39,12 @@ class _HomeScreenState extends State<HomeScreen> {
   static const _recommendationCount = 10;
   static const _popularCount = 10;
   static const _categoryListSize = 100;
+  static const _newsCount = 3;
 
   List<Recommendation>? _recommendations;
   List<Category>? _categories;
   List<Destination>? _popular;
+  List<News>? _news;
   String? _error;
 
   @override
@@ -55,15 +62,18 @@ class _HomeScreenState extends State<HomeScreen> {
           .read<CategoryProvider>()
           .get(filter: {'pageSize': _categoryListSize, 'sortBy': 'Name'});
       final popularFuture = context.read<DestinationProvider>().popular(top: _popularCount);
+      final newsFuture = context.read<NewsProvider>().latest(pageSize: _newsCount);
 
       final recommendations = await recommendationsFuture;
       final categories = await categoriesFuture;
       final popular = await popularFuture;
+      final news = await newsFuture;
       if (mounted) {
         setState(() {
           _recommendations = recommendations.items;
           _categories = categories.items.where((c) => c.isActive).toList();
           _popular = popular;
+          _news = news.items;
         });
       }
     } on Exception catch (e) {
@@ -138,8 +148,39 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: () => _openDestination(destination),
             ),
           ),
+        ..._buildNews(_news ?? []),
       ],
     );
+  }
+
+  List<Widget> _buildNews(List<News> news) {
+    return [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 20, 8, 4),
+        child: Row(
+          children: [
+            Expanded(child: Text('Novosti', style: Theme.of(context).textTheme.titleMedium)),
+            TextButton(
+              onPressed: () => openPage<void>(context, const NewsListScreen()),
+              child: const Text('Sve novosti'),
+            ),
+          ],
+        ),
+      ),
+      if (news.isEmpty)
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: Text('Još nema objavljenih novosti.'),
+        ),
+      for (final item in news)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          child: NewsCard(
+            news: item,
+            onTap: () => openPage<void>(context, NewsDetailsScreen(news: item)),
+          ),
+        ),
+    ];
   }
 
   Widget _buildRecommendations(List<Recommendation> recommendations) {

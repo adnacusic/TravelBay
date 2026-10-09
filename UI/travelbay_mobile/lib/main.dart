@@ -6,6 +6,7 @@ import 'providers/category_provider.dart';
 import 'providers/collection_provider.dart';
 import 'providers/destination_provider.dart';
 import 'providers/location_provider.dart';
+import 'providers/news_provider.dart';
 import 'providers/notification_provider.dart';
 import 'providers/recommendation_provider.dart';
 import 'providers/review_provider.dart';
@@ -41,6 +42,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => UserPreferenceProvider()),
         ChangeNotifierProvider(create: (_) => ViewHistoryProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => NewsProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
       ],
       child: const TravelBayApp(),

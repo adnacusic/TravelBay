@@ -10,7 +10,6 @@ import 'providers/dashboard_provider.dart';
 import 'providers/destination_image_provider.dart';
 import 'providers/destination_provider.dart';
 import 'providers/news_provider.dart';
-import 'providers/notification_provider.dart';
 import 'providers/report_provider.dart';
 import 'providers/review_provider.dart';
 import 'providers/user_provider.dart';
@@ -41,7 +40,6 @@ void main() {
         ChangeNotifierProvider(create: (_) => ReviewProvider()),
         ChangeNotifierProvider(create: (_) => NewsProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
-        ChangeNotifierProvider(create: (_) => NotificationProvider()),
         ChangeNotifierProvider(create: (_) => ReportProvider()),
       ],
       child: const TravelBayAdminApp(),

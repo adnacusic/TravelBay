@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Linq.Dynamic.Core;
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 
 namespace TravelBay.Services
@@ -49,8 +50,7 @@ namespace TravelBay.Services
 
             if (!string.IsNullOrWhiteSpace(search.SortBy))
             {
-                //TODO: parametrize sortBy to prevent SQL injection
-                query = query.OrderBy(search.SortBy);
+                query = query.OrderBy(SafeSortExpression(search.SortBy));
             }
             else
             {
@@ -75,6 +75,47 @@ namespace TravelBay.Services
                 Items = list,
                 TotalCount = totalCount
             };
+        }
+
+        /// <summary>Scalar columns of the entity (no navigations): the only names SortBy may use.</summary>
+        private static readonly Dictionary<string, string> SortableColumns = typeof(TEntity)
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => IsScalar(p.PropertyType))
+            .ToDictionary(p => p.Name, p => p.Name, StringComparer.OrdinalIgnoreCase);
+
+        private static readonly string[] SortDirections = { "asc", "desc" };
+
+        private static bool IsScalar(Type type)
+        {
+            var underlying = Nullable.GetUnderlyingType(type) ?? type;
+            return underlying.IsPrimitive || underlying.IsEnum || underlying == typeof(string)
+                || underlying == typeof(decimal) || underlying == typeof(DateTime);
+        }
+
+        /// <summary>
+        /// Rebuilds the client's SortBy from whitelisted parts only, so no expression text from the
+        /// request ever reaches Dynamic LINQ: "lastName, FirstName desc" -> "LastName, FirstName desc".
+        /// </summary>
+        private static string SafeSortExpression(string sortBy)
+        {
+            var parts = new List<string>();
+            foreach (var item in sortBy.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                var tokens = item.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                var direction = tokens.Length == 2 ? tokens[1].ToLowerInvariant() : null;
+                if (tokens.Length > 2 || !SortableColumns.TryGetValue(tokens[0], out var column)
+                    || (direction != null && !SortDirections.Contains(direction)))
+                {
+                    throw new ClientException($"Sortiranje po '{item}' nije podržano.");
+                }
+                parts.Add(direction == null ? column : $"{column} {direction}");
+            }
+
+            if (parts.Count == 0)
+            {
+                throw new ClientException("Sortiranje nije ispravno zadano.");
+            }
+            return string.Join(", ", parts);
         }
 
         protected virtual Task<IQueryable<TEntity>> IncludeRelatedEntitiesAsync(TSearch? search, IQueryable<TEntity> query)

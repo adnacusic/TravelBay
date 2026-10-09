@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../layouts/master_screen.dart';
 import '../../models/destination.dart';
@@ -184,6 +185,21 @@ class _DestinationDetailsScreenState extends State<DestinationDetailsScreen> {
     }
   }
 
+  /// System share sheet (WhatsApp, Viber, email …) with the name, place and description.
+  Future<void> _share(Destination destination) async {
+    final place = destination.cityName.isEmpty ? '' : ' — ${destination.cityName}';
+    try {
+      await SharePlus.instance.share(ShareParams(
+        subject: destination.name,
+        text: '${destination.name}$place\n\n${destination.description}\n\nPreporuka iz aplikacije TravelBay.',
+      ));
+    } on Exception catch (e) {
+      if (mounted) {
+        await showErrorDialog(context, 'Dijeljenje nije uspjelo: $e');
+      }
+    }
+  }
+
   Future<void> _addToPlan(Destination destination) async {
     final message = await TripItemSheet.show(context, destination: destination);
     if (message != null && mounted) {
@@ -276,6 +292,11 @@ class _DestinationDetailsScreenState extends State<DestinationDetailsScreen> {
           onPressed: () => _addToPlan(destination),
           icon: const Icon(Icons.map_outlined),
           label: const Text('U plan putovanja'),
+        ),
+        OutlinedButton.icon(
+          onPressed: () => _share(destination),
+          icon: const Icon(Icons.share_outlined),
+          label: const Text('Podijeli'),
         ),
       ],
     );

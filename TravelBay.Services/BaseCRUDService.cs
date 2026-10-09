@@ -2,14 +2,7 @@ using TravelBay.Model.Exceptions;
 using TravelBay.Model.SearchObjects;
 using TravelBay.Services.Database;
 using FluentValidation;
-using FluentValidation.Results;
-using Mapster;
-using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace TravelBay.Services
 {
@@ -21,6 +14,11 @@ namespace TravelBay.Services
         where TEntity : class
         where TSearch : BaseSearchObject, new()
     {
+        private const string CreatedAtProperty = "CreatedAt";
+        private const string UpdatedAtProperty = "UpdatedAt";
+
+        /// <summary>SQL Server error number of a FK/CHECK constraint violation.</summary>
+        private const int ForeignKeyViolationError = 547;
 
         protected readonly IValidator<TInsertRequest> _insertValidator;
         protected readonly IValidator<TUpdateRequest> _updateValidator;
@@ -32,17 +30,11 @@ namespace TravelBay.Services
         }
 
         /// <summary>
-        /// Gets a writable data source for CRUD operations. Override in derived classes.
-        /// </summary>
-
-
-        /// <summary>
         /// Maps an insert request to an entity. Override in derived classes for custom logic.
         /// </summary>
         protected virtual TEntity MapInsertRequestToEntity(TInsertRequest request)
         {
-            var entity = _mapper.Map<TEntity>(request ?? throw new ArgumentNullException(nameof(request)));
-            return entity;
+            return _mapper.Map<TEntity>(request ?? throw new ArgumentNullException(nameof(request)));
         }
 
         /// <summary>
@@ -50,10 +42,6 @@ namespace TravelBay.Services
         /// </summary>
         protected virtual void MapUpdateRequestToEntity(TUpdateRequest request, TEntity entity)
         {
-            // var config = new TypeAdapterConfig();
-            // config.NewConfig<TUpdateRequest, TEntity>()
-            //     .IgnoreNullValues(true);
-            // new Mapper(config).Map(request, entity);
             _mapper.Map(request, entity);
         }
 
@@ -62,31 +50,21 @@ namespace TravelBay.Services
         /// </summary>
         public virtual async Task<TResponse> InsertAsync(TInsertRequest request)
         {
-            var validationResult = await _insertValidator.ValidateAsync(request);
-            if (validationResult.IsValid == false)
-            {
-                var errors = validationResult.Errors.Select(e => _mapper.Map<ValidationFailure>(e));
-                throw new FluentValidation.ValidationException(errors);
-            }
+            await _insertValidator.ValidateAndThrowAsync(request);
 
             var entity = MapInsertRequestToEntity(request);
 
-            // Set the Id property
-            var entityType = entity.GetType();
-            var idProperty = entityType.GetProperty("Id");
-            //idProperty?.SetValue(entity, GenerateNewId());
-
-            // Set CreatedAt if exists
-            var createdAtProperty = entityType.GetProperty("CreatedAt");
+            // Entities with a CreatedAt column get it set here, so no service forgets it.
+            var createdAtProperty = typeof(TEntity).GetProperty(CreatedAtProperty);
             if (createdAtProperty?.CanWrite == true)
             {
                 createdAtProperty.SetValue(entity, DateTime.UtcNow);
             }
 
-            this._dbContext.Set<TEntity>().Add(entity);
-            await this._dbContext.SaveChangesAsync();
-            
-            return await Task.FromResult(_mapper.Map<TResponse>(entity));
+            _dbContext.Set<TEntity>().Add(entity);
+            await _dbContext.SaveChangesAsync();
+
+            return _mapper.Map<TResponse>(entity);
         }
 
         /// <summary>
@@ -94,31 +72,22 @@ namespace TravelBay.Services
         /// </summary>
         public virtual async Task<TResponse> UpdateAsync(int id, TUpdateRequest request)
         {
-            var validationResult = await _updateValidator.ValidateAsync(request);
-            if (validationResult.IsValid == false)
-            {
-                var errors = validationResult.Errors.Select(e => _mapper.Map<ValidationFailure>(e));
-                throw new FluentValidation.ValidationException(errors);
-            }
+            await _updateValidator.ValidateAndThrowAsync(request);
 
-           
-            var entity = await this._dbContext.Set<TEntity>().FindAsync(id);
-
-            if (entity == null)
-                throw new NotFoundException($"{typeof(TEntity).Name} with id {id} not found.");
+            var entity = await _dbContext.Set<TEntity>().FindAsync(id)
+                ?? throw new NotFoundException($"{typeof(TEntity).Name} with id {id} not found.");
 
             MapUpdateRequestToEntity(request, entity);
 
-            // Update the UpdatedAt timestamp
-            var updatedAtProperty = entity.GetType().GetProperty("UpdatedAt");
+            var updatedAtProperty = typeof(TEntity).GetProperty(UpdatedAtProperty);
             if (updatedAtProperty?.CanWrite == true)
             {
                 updatedAtProperty.SetValue(entity, DateTime.UtcNow);
             }
 
-            await this._dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
 
-            return await Task.FromResult(_mapper.Map<TResponse>(entity));
+            return _mapper.Map<TResponse>(entity);
         }
 
         /// <summary>
@@ -126,16 +95,14 @@ namespace TravelBay.Services
         /// </summary>
         public virtual async Task DeleteAsync(int id)
         {
-            var entity = await this._dbContext.Set<TEntity>().FindAsync(id);
+            var entity = await _dbContext.Set<TEntity>().FindAsync(id)
+                ?? throw new NotFoundException($"{typeof(TEntity).Name} with id {id} not found.");
 
-            if (entity == null)
-                throw new NotFoundException($"{typeof(TEntity).Name} with id {id} not found.");
-
-            this._dbContext.Set<TEntity>().Remove(entity);
+            _dbContext.Set<TEntity>().Remove(entity);
 
             try
             {
-                await this._dbContext.SaveChangesAsync();
+                await _dbContext.SaveChangesAsync();
             }
             catch (DbUpdateException ex) when (IsForeignKeyViolation(ex))
             {
@@ -144,8 +111,7 @@ namespace TravelBay.Services
             }
         }
 
-        /// <summary>SQL Server error 547 is a FK/CHECK constraint violation.</summary>
         private static bool IsForeignKeyViolation(DbUpdateException ex) =>
-            ex.InnerException is Microsoft.Data.SqlClient.SqlException sqlEx && sqlEx.Number == 547;
+            ex.InnerException is Microsoft.Data.SqlClient.SqlException sqlEx && sqlEx.Number == ForeignKeyViolationError;
     }
 }

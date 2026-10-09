@@ -3,7 +3,6 @@ using TravelBay.Services;
 using TravelBay.Model.Responses;
 using TravelBay.Model.SearchObjects;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using TravelBay.Model.Requests;
 
 namespace TravelBay.WebAPI.Controllers;

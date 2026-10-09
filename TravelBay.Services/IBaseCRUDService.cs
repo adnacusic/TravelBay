@@ -1,5 +1,4 @@
 using TravelBay.Model.SearchObjects;
-using System.Threading.Tasks;
 
 namespace TravelBay.Services
 {

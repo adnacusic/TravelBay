@@ -1,7 +1,5 @@
 using TravelBay.Model.Responses;
 using TravelBay.Model.SearchObjects;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace TravelBay.Services
 {

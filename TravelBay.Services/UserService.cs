@@ -9,9 +9,6 @@ using TravelBay.Services.Database;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace TravelBay.Services
 {

@@ -92,12 +92,8 @@ namespace TravelBay.WebAPI.Services.AccessManager
                 throw new ClientException("Refresh token is required");
             }
 
+            // Throws a ClientException when the token is unknown.
             var refreshToken = await _refreshTokenService.GetStoredTokenAsync(request.RefreshToken);
-
-            if (refreshToken == null)
-            {
-                throw new ClientException("Invalid refresh token");
-            }
 
             if (refreshToken.ExpiresAt < DateTime.UtcNow)
             {
@@ -155,7 +151,7 @@ namespace TravelBay.WebAPI.Services.AccessManager
                     new Claim(ClaimNames.FirstName, user.FirstName ?? string.Empty),
                     new Claim(ClaimNames.LastName, user.LastName ?? string.Empty),
                     new Claim(ClaimNames.Email, user.Email ?? string.Empty),
-                    new Claim(ClaimNames.Role, user.Role ?? "user"),
+                    new Claim(ClaimNames.Role, user.Role ?? RoleNames.User),
                     new Claim(ClaimNames.IsActive, user.IsActive.ToString()),
                     new Claim(ClaimNames.TokenId, Guid.NewGuid().ToString("N"))
                 }),
@@ -176,7 +172,5 @@ namespace TravelBay.WebAPI.Services.AccessManager
             var randombytes = RandomNumberGenerator.GetBytes(64);
             return Convert.ToBase64String(randombytes);
         }
-
-       
     }
 }

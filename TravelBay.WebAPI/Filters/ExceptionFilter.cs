@@ -49,7 +49,6 @@ namespace TravelBay.WebAPI.Filters
             }
             else
             {
-                //context.ModelState.AddModelError("serverError", context.Exception.Message);
                 context.ModelState.AddModelError("serverError", "Server side error, please check logs.");
                 context.HttpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 _logger.LogError(context.Exception, "Unhandled exception.");

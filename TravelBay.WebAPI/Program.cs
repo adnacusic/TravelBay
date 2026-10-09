@@ -3,7 +3,6 @@ using TravelBay.Model.Requests;
 using TravelBay.Model.Responses;
 using TravelBay.Services;
 using TravelBay.Services.Database;
-using TravelBay.Services.Hubs;
 using TravelBay.Services.Messaging;
 using TravelBay.Services.Reports;
 using TravelBay.Services.Validators;
@@ -13,7 +12,6 @@ using TravelBay.WebAPI.Services.AccessManager;
 using FluentValidation;
 using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -43,8 +41,6 @@ builder.Services.AddScoped<IAuthenticatedUserAccessor, HttpAuthenticatedUserAcce
 builder.Services.AddControllers(
    options => options.Filters.Add<ExceptionFilter>()
 );
-
-builder.Services.AddSignalR();
 
 // Add Entity Framework Core DbContext
 // Connection string is composed from .env, never hardcoded/committed (DB_HOST differs between host and docker network).
@@ -196,10 +192,7 @@ builder.Services.AddScoped<IValidator<TripPlanUpdateRequest>, TripPlanUpdateVali
 builder.Services.AddScoped<IValidator<CollectionInsertRequest>, CollectionInsertValidator>();
 builder.Services.AddScoped<IValidator<CollectionUpdateRequest>, CollectionUpdateValidator>();
 
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-
-builder.Services.AddAuthentication(options => // dodavanje authentfikacije i autorizacije u projekat
+builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -222,8 +215,6 @@ builder.Services.AddAuthentication(options => // dodavanje authentfikacije i aut
         NameClaimType = TravelBay.Model.Constants.ClaimNames.Id
     };
 
-    // SignalR's browser/WebSocket client can't set an Authorization header, so it sends the
-    // JWT as ?access_token=... instead - accept it there, and only there.
     o.Events = new JwtBearerEvents
     {
         // A token signed out through /Access/Logout stays cryptographically valid until it expires,
@@ -236,15 +227,6 @@ builder.Services.AddAuthentication(options => // dodavanje authentfikacije i aut
             {
                 context.Fail("The access token has been revoked.");
             }
-        },
-        OnMessageReceived = context =>
-        {
-            var accessToken = context.Request.Query["access_token"];
-            if (!string.IsNullOrEmpty(accessToken) && context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
-            {
-                context.Token = accessToken;
-            }
-            return Task.CompletedTask;
         }
     };
 });
@@ -291,11 +273,14 @@ var app = builder.Build();
 // Schema + seed are applied on startup, so docker compose up on a clean machine creates database 220042.
 await app.MigrateDatabaseAsync();
 
-// API docs are always on: the reviewer runs the containers as they are, without a Development switch.
-app.MapOpenApi();
-app.MapScalarApiReference();
-app.UseSwagger();
-app.UseSwaggerUI();
+// API docs only in Development (ASPNETCORE_ENVIRONMENT in .env): one OpenAPI document (Swashbuckle),
+// shown by Swagger UI (/swagger) and by Scalar (/scalar/v1).
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    app.MapScalarApiReference(options => options.WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json"));
+}
 
 app.UseCors("TravelBayClients");
 
@@ -304,6 +289,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHub<NotificationHub>("/hubs/notifications");
 
 await app.RunAsync();

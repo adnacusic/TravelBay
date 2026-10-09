@@ -61,6 +61,24 @@ public class DestinationService
             {
                 query = query.Where(d => d.CityId == search.CityId.Value);
             }
+            if (search.CountryId.HasValue)
+            {
+                query = query.Where(d => d.City.CountryId == search.CountryId.Value);
+            }
+            if (!string.IsNullOrWhiteSpace(search.SearchText))
+            {
+                var text = search.SearchText.Trim();
+                query = query.Where(d => d.Name.Contains(text)
+                    || d.City.Name.Contains(text)
+                    || d.City.Country.Name.Contains(text));
+            }
+            if (search.MinRating.HasValue)
+            {
+                var minRating = search.MinRating.Value;
+                query = query.Where(d => d.Reviews
+                    .Where(r => r.Status == ReviewStatus.Approved)
+                    .Average(r => (double?)r.Rating) >= minRating);
+            }
         }
 
         return query;

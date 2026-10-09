@@ -2,15 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/category.dart';
+import '../../models/city.dart';
+import '../../models/country.dart';
 import '../../models/destination.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/destination_provider.dart';
+import '../../providers/location_provider.dart';
 import '../../utils/app_navigator.dart';
 import '../../widgets/destination_widgets.dart';
 import '../../widgets/search_field.dart';
 import '../destination/destination_details_screen.dart';
 
-/// Search by name with a category filter; results load page by page.
+/// Search by name or place (city, country) with category, location and minimum rating
+/// filters; filtering runs in the API and results load page by page.
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key, this.initialCategoryId});
 
@@ -23,12 +27,20 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   static const _pageSize = 20;
-  static const _categoryListSize = 100;
+  static const _referenceListSize = 100;
+
+  /// Minimum average rating options; null means any rating (also unrated destinations).
+  static const _ratingOptions = <double?>[null, 3, 4, 4.5];
 
   final _searchController = TextEditingController();
 
   List<Category> _categories = [];
   int? _categoryId;
+  List<Country> _countries = [];
+  int? _countryId;
+  List<City> _cities = [];
+  int? _cityId;
+  double? _minRating;
 
   final List<Destination> _results = [];
   int _totalCount = 0;
@@ -43,6 +55,8 @@ class _SearchScreenState extends State<SearchScreen> {
     super.initState();
     _categoryId = widget.initialCategoryId;
     _loadCategories();
+    _loadCountries();
+    _loadCities();
     _search();
   }
 
@@ -56,7 +70,7 @@ class _SearchScreenState extends State<SearchScreen> {
     try {
       final result = await context
           .read<CategoryProvider>()
-          .get(filter: {'pageSize': _categoryListSize, 'sortBy': 'Name'});
+          .get(filter: {'pageSize': _referenceListSize, 'sortBy': 'Name'});
       if (mounted) {
         setState(() => _categories = result.items.where((c) => c.isActive).toList());
       }
@@ -67,7 +81,40 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
-  /// Starts a new search (first page) with the current text and category.
+  Future<void> _loadCountries() async {
+    try {
+      final result = await context
+          .read<CountryProvider>()
+          .get(filter: {'pageSize': _referenceListSize, 'sortBy': 'Name'});
+      if (mounted) {
+        setState(() => _countries = result.items);
+      }
+    } on Exception catch (e) {
+      if (mounted) {
+        setState(() => _error = e.toString());
+      }
+    }
+  }
+
+  /// Cities of the selected country (all cities when no country is chosen).
+  Future<void> _loadCities() async {
+    try {
+      final result = await context.read<CityProvider>().get(filter: {
+        'pageSize': _referenceListSize,
+        'sortBy': 'Name',
+        'countryId': _countryId,
+      });
+      if (mounted) {
+        setState(() => _cities = result.items);
+      }
+    } on Exception catch (e) {
+      if (mounted) {
+        setState(() => _error = e.toString());
+      }
+    }
+  }
+
+  /// Starts a new search (first page) with the current text and filters.
   Future<void> _search() async {
     setState(() {
       _results.clear();
@@ -87,8 +134,11 @@ class _SearchScreenState extends State<SearchScreen> {
     });
     try {
       final result = await context.read<DestinationProvider>().get(filter: {
-        'name': _searchController.text.trim(),
+        'searchText': _searchController.text.trim(),
         'categoryId': _categoryId,
+        'countryId': _countryId,
+        'cityId': _cityId,
+        'minRating': _minRating,
         'includeCategory': true,
         'includeImages': true,
         'includeTotalCount': true,
@@ -119,6 +169,37 @@ class _SearchScreenState extends State<SearchScreen> {
     _search();
   }
 
+  void _selectCountry(int? countryId) {
+    setState(() {
+      _countryId = countryId;
+      _cityId = null;
+      _cities = [];
+    });
+    _loadCities();
+    _search();
+  }
+
+  void _selectCity(int? cityId) {
+    setState(() => _cityId = cityId);
+    _search();
+  }
+
+  void _selectRating(double? minRating) {
+    setState(() => _minRating = minRating);
+    _search();
+  }
+
+  /// "Sve ocjene", "★ 3+", "★ 4,5+".
+  static String _ratingLabel(double? rating) {
+    if (rating == null) {
+      return 'Sve ocjene';
+    }
+    final text = rating == rating.roundToDouble()
+        ? rating.toStringAsFixed(0)
+        : rating.toString().replaceAll('.', ',');
+    return '★ $text+';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -129,10 +210,64 @@ class _SearchScreenState extends State<SearchScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
             child: SearchField(
-              label: 'Naziv destinacije',
+              label: 'Naziv, grad ili država',
               controller: _searchController,
               width: double.infinity,
               onSearch: (_) => _search(),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+            child: Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<int?>(
+                    key: ValueKey('country-$_countryId'),
+                    initialValue: _countryId,
+                    isExpanded: true,
+                    decoration: const InputDecoration(labelText: 'Država', isDense: true),
+                    items: [
+                      const DropdownMenuItem<int?>(value: null, child: Text('Sve države')),
+                      for (final country in _countries)
+                        DropdownMenuItem<int?>(value: country.id, child: Text(country.name)),
+                    ],
+                    onChanged: _selectCountry,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: DropdownButtonFormField<int?>(
+                    key: ValueKey('city-$_countryId-$_cityId-${_cities.length}'),
+                    initialValue: _cityId,
+                    isExpanded: true,
+                    decoration: const InputDecoration(labelText: 'Grad', isDense: true),
+                    items: [
+                      const DropdownMenuItem<int?>(value: null, child: Text('Svi gradovi')),
+                      for (final city in _cities)
+                        DropdownMenuItem<int?>(value: city.id, child: Text(city.name)),
+                    ],
+                    onChanged: _selectCity,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 48,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              children: [
+                for (final rating in _ratingOptions)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: Text(_ratingLabel(rating)),
+                      selected: _minRating == rating,
+                      onSelected: (_) => _selectRating(rating),
+                    ),
+                  ),
+              ],
             ),
           ),
           SizedBox(
@@ -144,7 +279,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: ChoiceChip(
-                    label: const Text('Sve'),
+                    label: const Text('Sve kategorije'),
                     selected: _categoryId == null,
                     onSelected: (_) => _selectCategory(null),
                   ),

@@ -266,18 +266,14 @@ builder.Services.AddSwaggerGen(
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-    app.MapScalarApiReference();
+// Schema + seed are applied on startup, so docker compose up on a clean machine creates database 220042.
+await app.MigrateDatabaseAsync();
 
-
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-//app.UseHttpsRedirection();
+// API docs are always on: the reviewer runs the containers as they are, without a Development switch.
+app.MapOpenApi();
+app.MapScalarApiReference();
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseCors("TravelBayClients");
 
@@ -288,4 +284,4 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
 
-app.Run();
+await app.RunAsync();

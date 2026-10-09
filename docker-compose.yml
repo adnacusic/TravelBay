@@ -48,6 +48,7 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_started
+    restart: unless-stopped
 
   # Separate service (second container besides the API): Python AI agents consuming RabbitMQ jobs.
   worker:

@@ -44,10 +44,10 @@ namespace TravelBay.WebAPI.Controllers
         }
 
         [HttpPost("Register")]
-        public async Task<IActionResult> Register([FromBody] UserInsertRequest request)
+        public async Task<IActionResult> Register([FromBody] UserRegisterRequest request)
         {
-            await _userService.InsertAsync(request);
-            return Ok("You have registered successfully");
+            await _userService.RegisterAsync(request);
+            return Ok(new { message = "Račun je uspješno kreiran." });
         }
     }
 }

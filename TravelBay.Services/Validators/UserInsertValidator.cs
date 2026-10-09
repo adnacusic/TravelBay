@@ -3,9 +3,10 @@ using FluentValidation;
 
 namespace TravelBay.Services.Validators
 {
-    public class UserInsertValidator : AbstractValidator<UserInsertRequest>
+    /// <summary>Rules shared by self-registration and admin-created accounts.</summary>
+    public class UserRegisterValidator : AbstractValidator<UserRegisterRequest>
     {
-        public UserInsertValidator()
+        public UserRegisterValidator()
         {
             RuleFor(x => x.FirstName)
                 .NotEmpty().WithMessage("First name is required.")
@@ -33,6 +34,14 @@ namespace TravelBay.Services.Validators
             RuleFor(x => x.PhoneNumber)
                 .Matches(PhoneNumberRules.Pattern).WithMessage(PhoneNumberRules.Message)
                 .When(x => !string.IsNullOrEmpty(x.PhoneNumber));
+        }
+    }
+
+    public class UserInsertValidator : AbstractValidator<UserInsertRequest>
+    {
+        public UserInsertValidator()
+        {
+            Include(new UserRegisterValidator());
         }
     }
 }

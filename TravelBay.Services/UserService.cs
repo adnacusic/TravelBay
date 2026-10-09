@@ -115,6 +115,17 @@ namespace TravelBay.Services
             return entity;
         }
 
+        public Task<UserResponse> RegisterAsync(UserRegisterRequest request) => InsertAsync(new UserInsertRequest
+        {
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            Email = request.Email,
+            Username = request.Username,
+            Password = request.Password,
+            PhoneNumber = request.PhoneNumber,
+            IsActive = true
+        });
+
         public override async Task<UserResponse> InsertAsync(UserInsertRequest request)
         {
             // let FluentValidation throw if the request isn't valid; the exception filter will
@@ -123,23 +134,17 @@ namespace TravelBay.Services
 
             await EnsureUniqueAsync(request.Email, request.Username, exceptUserId: null);
 
-            var entity = MapInsertRequestToEntity(request);
-            entity.CreatedAt = DateTime.UtcNow;
-
-            _dbContext.Users.Add(entity);
-            await _dbContext.SaveChangesAsync();
-
             // Every self-registered or admin-created user gets the default "User" role —
-            // clients can never request a role directly (UserInsertRequest has no such field).
+            // clients can never request a role directly (the requests have no such field).
             var defaultRole = await _dbContext.Roles.FirstOrDefaultAsync(r => r.Name == RoleNames.User)
                 ?? throw new InvalidOperationException($"Seed role '{RoleNames.User}' is missing.");
 
-            _dbContext.UserRoles.Add(new UserRole
-            {
-                UserId = entity.Id,
-                RoleId = defaultRole.Id,
-                DateAssigned = DateTime.UtcNow
-            });
+            var entity = MapInsertRequestToEntity(request);
+            entity.CreatedAt = DateTime.UtcNow;
+            entity.UserRoles.Add(new UserRole { RoleId = defaultRole.Id, DateAssigned = DateTime.UtcNow });
+
+            // User and role in one SaveChanges: an account without a role is never stored.
+            _dbContext.Users.Add(entity);
             await _dbContext.SaveChangesAsync();
 
             return _mapper.Map<UserResponse>(entity);

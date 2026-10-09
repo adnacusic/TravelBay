@@ -7,6 +7,9 @@ namespace TravelBay.Services
 {
     public interface IUserService : IBaseCRUDService<UserResponse, UserSearch, UserInsertRequest, UserUpdateRequest>
     {
+        /// <summary>Self-registration: always an active User account without a picture.</summary>
+        Task<UserResponse> RegisterAsync(UserRegisterRequest request);
+
         Task<UserSensitveResponse?> GetByUsernameAsync(string username);
         Task<UserResponse?> GetWithRoleByIdAsync(int id);
 

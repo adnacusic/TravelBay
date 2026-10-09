@@ -9,10 +9,10 @@ Preduslovi: Flutter SDK (Windows desktop), uključen Windows Developer Mode, pok
 
 ```
 flutter pub get
-flutter run -d windows --dart-define=baseUrl=http://localhost:8080/
+flutter run -d windows --dart-define=API_BASE_URL=http://localhost:8080/
 ```
 
-`baseUrl` se zadaje isključivo preko `--dart-define`; bez njega se koristi `http://localhost:8080/`.
+`API_BASE_URL` se zadaje isključivo preko `--dart-define`; bez njega se koristi `http://localhost:8080/`.
 
 ## Struktura
 

@@ -1,9 +1,9 @@
-/// API address comes only from `--dart-define=baseUrl=...`; the default is the local docker-compose API.
+/// API address comes only from `--dart-define=API_BASE_URL=...`; the default is the local docker-compose API.
 class AppConfig {
   AppConfig._();
 
   static const String _rawBaseUrl = String.fromEnvironment(
-    'baseUrl',
+    'API_BASE_URL',
     defaultValue: 'http://localhost:8080/',
   );
 

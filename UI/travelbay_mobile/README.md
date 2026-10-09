@@ -10,11 +10,11 @@ Preduslovi: Flutter SDK s Android toolchainom, pokrenut Android emulator (AVD) i
 
 ```
 flutter pub get
-flutter run --dart-define=baseUrl=http://10.0.2.2:8080/
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080/
 ```
 
 `10.0.2.2` je adresa računara gledano iz Android emulatora (`localhost` bi bio sam emulator).
-`baseUrl` se zadaje isključivo preko `--dart-define`; bez njega se koristi `http://10.0.2.2:8080/`.
+`API_BASE_URL` se zadaje isključivo preko `--dart-define`; bez njega se koristi `http://10.0.2.2:8080/`.
 
 ## Struktura
 

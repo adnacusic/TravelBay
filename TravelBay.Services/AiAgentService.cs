@@ -21,14 +21,14 @@ public class AiAgentService : IAiAgentService
 
     private readonly TravelBayDbContext _dbContext;
     private readonly IAuthenticatedUserAccessor _userAccessor;
-    private readonly IAiAgentQueuePublisher _publisher;
+    private readonly IMessageQueuePublisher _publisher;
     private readonly IAuditLogService _auditLogService;
     private readonly ILogger<AiAgentService> _logger;
 
     public AiAgentService(
         TravelBayDbContext dbContext,
         IAuthenticatedUserAccessor userAccessor,
-        IAiAgentQueuePublisher publisher,
+        IMessageQueuePublisher publisher,
         IAuditLogService auditLogService,
         ILogger<AiAgentService> logger)
     {
@@ -132,7 +132,7 @@ public class AiAgentService : IAiAgentService
 
         try
         {
-            await _publisher.PublishAsync(command, run.Id);
+            await _publisher.PublishAsync(AiAgentMessages.QueueName, new { command, runId = run.Id });
         }
         catch (Exception ex) when (ex is RabbitMQ.Client.Exceptions.BrokerUnreachableException
                                        or RabbitMQ.Client.Exceptions.OperationInterruptedException

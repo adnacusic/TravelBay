@@ -1,6 +1,7 @@
-"""RabbitMQ consumer: one job at a time from the durable queue, acknowledged only after the run is
-written to the database. A job runs in its own thread so pika keeps answering broker heartbeats
-during long runs (the image agent pauses between Wikimedia Commons calls)."""
+"""RabbitMQ consumer for two durable queues: AI agent runs and emails. Each queue has its own
+channel with prefetch 1, so a long agent run never delays a password reset email. A message is
+acknowledged only after it is handled, and every job runs in its own thread so pika keeps answering
+broker heartbeats during long runs (the image agent pauses between Wikimedia Commons calls)."""
 
 import functools
 import json
@@ -11,10 +12,12 @@ import time
 import pika
 import pika.exceptions
 
-from . import db
+from typing import Callable
+
+from . import db, emails
 from .agents import FatalAgentError, images_agent, keywords_agent
 from .config import Settings
-from .messages import COMMAND_AGENT, QUEUE_NAME, AgentType, RunStatus
+from .messages import COMMAND_AGENT, EMAIL_QUEUE_NAME, QUEUE_NAME, AgentType, RunStatus
 from .runs import RunReporter
 
 logger = logging.getLogger(__name__)
@@ -32,7 +35,7 @@ AGENTS = {
 }
 
 
-def process_job(settings: Settings, body: bytes) -> None:
+def process_agent_job(settings: Settings, body: bytes) -> None:
     """Never raises: every outcome ends up in the run row (or the worker log for a bad message)."""
     try:
         message = json.loads(body)
@@ -81,12 +84,21 @@ def _ack(channel, delivery_tag: int) -> None:
         channel.basic_ack(delivery_tag)
 
 
-def _work(connection, channel, delivery_tag: int, settings: Settings, body: bytes) -> None:
+Handler = Callable[[Settings, bytes], None]
+
+HANDLERS: dict[str, Handler] = {
+    QUEUE_NAME: process_agent_job,
+    EMAIL_QUEUE_NAME: emails.process_email_job,
+}
+
+
+def _work(connection, channel, delivery_tag: int, handler: Handler, settings: Settings, body: bytes) -> None:
     try:
-        process_job(settings, body)
+        handler(settings, body)
     except Exception:
-        # Database unreachable etc.: the message is still acknowledged, otherwise the same job
-        # would be redelivered forever. The run stays Queued/Running and the admin can see it.
+        # Database or SMTP unreachable etc.: the message is still acknowledged, otherwise the same
+        # job would be redelivered forever. An agent run stays Queued/Running and the admin sees it;
+        # a lost email is requested again by the user.
         logger.exception("Job could not be processed.")
     connection.add_callback_threadsafe(functools.partial(_ack, channel, delivery_tag))
 
@@ -103,23 +115,30 @@ def _consume_once(settings: Settings) -> None:
         client_properties={"connection_name": "travelbay-worker"},
     )
     connection = pika.BlockingConnection(parameters)
-    channel = connection.channel()
-    channel.queue_declare(queue=QUEUE_NAME, durable=True)
-    channel.basic_qos(prefetch_count=1)
-
     threads: list[threading.Thread] = []
 
-    def on_message(ch, method, _properties, body):
-        thread = threading.Thread(
-            target=_work, args=(connection, ch, method.delivery_tag, settings, body), daemon=True
-        )
-        thread.start()
-        threads.append(thread)
+    for queue, handler in HANDLERS.items():
+        channel = connection.channel()
+        channel.queue_declare(queue=queue, durable=True)
+        channel.basic_qos(prefetch_count=1)
 
-    channel.basic_consume(queue=QUEUE_NAME, on_message_callback=on_message)
-    logger.info("Listening on RabbitMQ queue '%s' at %s:%s.", QUEUE_NAME, settings.rabbitmq_host, settings.rabbitmq_port)
+        def on_message(ch, method, _properties, body, handler=handler):
+            thread = threading.Thread(
+                target=_work, args=(connection, ch, method.delivery_tag, handler, settings, body), daemon=True
+            )
+            thread.start()
+            threads.append(thread)
+
+        channel.basic_consume(queue=queue, on_message_callback=on_message)
+        logger.info("Listening on RabbitMQ queue '%s' at %s:%s.", queue, settings.rabbitmq_host, settings.rabbitmq_port)
+
+    if not settings.smtp_configured:
+        logger.warning("SMTP is not configured (SMTP_HOST / SMTP_FROM in .env): password reset emails cannot be sent.")
+
     try:
-        channel.start_consuming()
+        # Dispatches the deliveries of both channels until the connection drops.
+        while True:
+            connection.process_data_events(time_limit=None)
     finally:
         for thread in threads:
             thread.join()

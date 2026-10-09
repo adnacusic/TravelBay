@@ -1,0 +1,11 @@
+namespace TravelBay.Model.Requests
+{
+    /// <summary>The emailed code proves the user owns the account's email address.</summary>
+    public class ResetPasswordRequest
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
+        public string ConfirmNewPassword { get; set; } = string.Empty;
+    }
+}

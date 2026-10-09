@@ -45,9 +45,26 @@ class Settings:
     groq_model: str
     image_search_delay_seconds: float
 
+    # Emails ("Zaboravljena lozinka"). Optional so the worker still runs the agents without SMTP;
+    # the API refuses the request with a clear message when SMTP_HOST/SMTP_FROM are missing.
+    smtp_host: str
+    smtp_port: int
+    smtp_user: str
+    smtp_password: str
+    smtp_from: str
+    smtp_use_ssl: bool
+
+    @property
+    def smtp_configured(self) -> bool:
+        return bool(self.smtp_host and self.smtp_from)
+
 
 # The API connects as sa as well (Program.cs); the password is DB_SA_PASSWORD from .env.
 DB_USER = "sa"
+
+# Submission port with STARTTLS; implicit TLS (SMTP_USE_SSL=true) normally uses 465.
+DEFAULT_SMTP_PORT = 587
+TRUE_VALUES = {"1", "true", "yes", "da"}
 
 
 def load_settings() -> Settings:
@@ -64,4 +81,10 @@ def load_settings() -> Settings:
         groq_api_key=_optional("GROQ_API_KEY"),
         groq_model=_required("GROQ_MODEL"),
         image_search_delay_seconds=float(_required("IMAGE_SEARCH_DELAY_SECONDS")),
+        smtp_host=_optional("SMTP_HOST"),
+        smtp_port=int(_optional("SMTP_PORT") or DEFAULT_SMTP_PORT),
+        smtp_user=_optional("SMTP_USER"),
+        smtp_password=_optional("SMTP_PASS"),
+        smtp_from=_optional("SMTP_FROM"),
+        smtp_use_ssl=_optional("SMTP_USE_SSL").lower() in TRUE_VALUES,
     )

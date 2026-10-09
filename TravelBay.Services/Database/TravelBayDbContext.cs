@@ -36,6 +36,7 @@ namespace TravelBay.Services.Database
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<AiAgentRun> AiAgentRuns { get; set; }
         public DbSet<RevokedAccessToken> RevokedAccessTokens { get; set; }
+        public DbSet<PasswordResetCode> PasswordResetCodes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

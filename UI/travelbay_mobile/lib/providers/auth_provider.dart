@@ -97,6 +97,48 @@ class AuthProvider extends ChangeNotifier {
     await login(request['username'] as String, request['password'] as String);
   }
 
+  /// "Zaboravljena lozinka": the API emails a code (through the worker). Returns the server's
+  /// message, which is the same whether or not the email belongs to an account.
+  Future<String> requestPasswordResetCode(String email) =>
+      _postAnonymous('Access/ForgotPassword', {'email': email}, 'Slanje koda nije uspjelo. Pokušajte ponovo.');
+
+  /// Sets a new password with the emailed code; every session of the account is signed out.
+  Future<String> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+    required String confirmNewPassword,
+  }) =>
+      _postAnonymous(
+        'Access/ResetPassword',
+        {
+          'email': email,
+          'code': code,
+          'newPassword': newPassword,
+          'confirmNewPassword': confirmNewPassword,
+        },
+        'Promjena lozinke nije uspjela. Pokušajte ponovo.',
+      );
+
+  Future<String> _postAnonymous(String path, Map<String, dynamic> body, String fallback) async {
+    final http.Response response;
+    try {
+      response = await http.post(
+        Uri.parse('${AppConfig.baseUrl}$path'),
+        headers: _jsonHeaders,
+        body: jsonEncode(body),
+      );
+    } on http.ClientException {
+      throw ApiClientException(apiUnreachableMessage);
+    }
+
+    if (response.statusCode != 200) {
+      throw ApiErrorParser.parse(response.body, fallback: fallback);
+    }
+    final data = jsonDecode(response.body);
+    return data is Map<String, dynamic> && data['message'] is String ? data['message'] as String : '';
+  }
+
   /// Signs out on the server too (refresh tokens deleted, this access token revoked),
   /// then forgets the session. The local sign-out happens even when the API is unreachable.
   Future<void> logout() async {

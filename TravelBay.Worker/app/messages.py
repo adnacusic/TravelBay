@@ -1,9 +1,13 @@
-"""RabbitMQ contract shared with the API (TravelBay.Model/Constants/AiAgentMessages.cs) and the
-int values of the C# enums AiAgentType / AiAgentRunStatus stored in the AiAgentRuns table."""
+"""RabbitMQ contract shared with the API (TravelBay.Model/Constants/AiAgentMessages.cs and
+EmailMessages.cs) and the int values of the C# enums AiAgentType / AiAgentRunStatus stored in the
+AiAgentRuns table."""
 
 from enum import IntEnum
 
 QUEUE_NAME = "travelbay.ai-agents"
+EMAIL_QUEUE_NAME = "travelbay.emails"
+
+SEND_PASSWORD_RESET_CODE = "SendPasswordResetCode"
 
 GENERATE_KEYWORDS = "GenerateKeywords"
 FIND_IMAGES = "FindImages"

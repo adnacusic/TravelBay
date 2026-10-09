@@ -156,7 +156,17 @@ var rabbitMqSettings = new RabbitMqSettings
 };
 builder.Services.AddSingleton(rabbitMqSettings);
 builder.Services.AddSingleton<RabbitMqConnectionProvider>();
-builder.Services.AddScoped<IAiAgentQueuePublisher, AiAgentQueuePublisher>();
+builder.Services.AddScoped<IMessageQueuePublisher, RabbitMqPublisher>();
+
+// SMTP itself is used by the worker; the API only checks that it is configured (see SmtpSettings).
+builder.Services.AddSingleton(new SmtpSettings
+{
+    Host = Environment.GetEnvironmentVariable("SMTP_HOST"),
+    From = Environment.GetEnvironmentVariable("SMTP_FROM")
+});
+builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
+builder.Services.AddScoped<IValidator<ForgotPasswordRequest>, ForgotPasswordValidator>();
+builder.Services.AddScoped<IValidator<ResetPasswordRequest>, ResetPasswordValidator>();
 builder.Services.AddScoped<IAiAgentService, AiAgentService>();
 
 builder.Services.AddScoped<IValidator<DestinationInsertRequest>, DestinationInsertValidator>();

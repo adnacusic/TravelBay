@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import '../../layouts/container_screen.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/app_navigator.dart';
+import '../../utils/dialogs.dart';
 import '../../utils/validators.dart';
+import 'forgot_password_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -67,6 +69,15 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         setState(() => _isSubmitting = false);
       }
+    }
+  }
+
+  Future<void> _forgotPassword() async {
+    final message = await openPage<String>(context, const ForgotPasswordScreen());
+    if (message != null && mounted) {
+      setState(() => _errorMessage = null);
+      _passwordController.clear();
+      showSuccessMessage(context, message);
     }
   }
 
@@ -147,7 +158,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           )
                         : const Text('Prijava'),
                   ),
-                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _isSubmitting ? null : _forgotPassword,
+                      child: const Text('Zaboravljena lozinka?'),
+                    ),
+                  ),
                   TextButton(
                     onPressed: _isSubmitting
                         ? null

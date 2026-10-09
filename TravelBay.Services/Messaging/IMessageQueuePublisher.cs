@@ -1,9 +1,9 @@
 namespace TravelBay.Services.Messaging;
 
-/// <summary>Puts an AI agent job on the RabbitMQ queue the Python worker consumes.</summary>
-public interface IAiAgentQueuePublisher
+/// <summary>Puts a job on a RabbitMQ queue consumed by the Python worker (AI agents, emails).</summary>
+public interface IMessageQueuePublisher
 {
-    /// <param name="command">AiAgentMessages.GenerateKeywords or AiAgentMessages.FindImages.</param>
-    /// <param name="runId">The AiAgentRun row the worker reports its progress into.</param>
-    Task PublishAsync(string command, int runId, CancellationToken cancellationToken = default);
+    /// <param name="queue">AiAgentMessages.QueueName or EmailMessages.QueueName.</param>
+    /// <param name="message">Serialized as JSON; the worker reads it by the same property names.</param>
+    Task PublishAsync(string queue, object message, CancellationToken cancellationToken = default);
 }

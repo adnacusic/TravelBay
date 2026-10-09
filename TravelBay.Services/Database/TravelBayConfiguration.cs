@@ -219,6 +219,13 @@ namespace TravelBay.Services.Database
             modelBuilder.Entity<RevokedAccessToken>()
                 .HasIndex(t => t.Jti)
                 .IsUnique();
+
+            // ----- PasswordResetCode -----
+            modelBuilder.Entity<PasswordResetCode>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

@@ -11,6 +11,9 @@ public interface INotificationService
     Task MarkAsReadAsync(int id);
     Task MarkAllAsReadAsync();
 
-    /// <summary>Internal write hook used by other services (Review/TripPlan state machines) — there is no public create endpoint.</summary>
-    Task CreateAsync(int userId, string title, string message, NotificationType type);
+    /// <summary>
+    /// Internal write hook used by the state machines (no public create endpoint). Only adds the
+    /// notification to the current unit of work; the caller saves it with the status change.
+    /// </summary>
+    void Add(int userId, string title, string message, NotificationType type);
 }

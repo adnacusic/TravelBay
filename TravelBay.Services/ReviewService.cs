@@ -20,16 +20,19 @@ public class ReviewService
         IReviewService
 {
     private readonly IAuthenticatedUserAccessor _userAccessor;
+    private readonly IReviewStateMachine _reviewStateMachine;
 
     public ReviewService(
         TravelBayDbContext dbContext,
         IMapper mapper,
         IValidator<ReviewInsertRequest> insertValidator,
         IValidator<ReviewUpdateRequest> updateValidator,
-        IAuthenticatedUserAccessor userAccessor)
+        IAuthenticatedUserAccessor userAccessor,
+        IReviewStateMachine reviewStateMachine)
         : base(dbContext, mapper, insertValidator, updateValidator)
     {
         _userAccessor = userAccessor;
+        _reviewStateMachine = reviewStateMachine;
     }
 
     public override async Task<PageResult<ReviewResponse>> GetAllAsync(ReviewSearchObject? search = null)
@@ -160,6 +163,7 @@ public class ReviewService
             throw new NotFoundException($"{nameof(Review)} with id {id} not found.");
         }
 
+        _reviewStateMachine.PrepareForEdit(entity, userId);
         entity.Rating = request.Rating;
         entity.Comment = request.Comment?.Trim();
         await _dbContext.SaveChangesAsync();

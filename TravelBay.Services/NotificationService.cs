@@ -3,8 +3,6 @@ using TravelBay.Model.Exceptions;
 using TravelBay.Model.Responses;
 using TravelBay.Model.SearchObjects;
 using TravelBay.Services.Database;
-using TravelBay.Services.Hubs;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace TravelBay.Services;
@@ -13,13 +11,11 @@ public class NotificationService : INotificationService
 {
     private readonly TravelBayDbContext _dbContext;
     private readonly IAuthenticatedUserAccessor _userAccessor;
-    private readonly IHubContext<NotificationHub> _hubContext;
 
-    public NotificationService(TravelBayDbContext dbContext, IAuthenticatedUserAccessor userAccessor, IHubContext<NotificationHub> hubContext)
+    public NotificationService(TravelBayDbContext dbContext, IAuthenticatedUserAccessor userAccessor)
     {
         _dbContext = dbContext;
         _userAccessor = userAccessor;
-        _hubContext = hubContext;
     }
 
     private int CurrentUserId() =>
@@ -88,9 +84,9 @@ public class NotificationService : INotificationService
             .ExecuteUpdateAsync(setters => setters.SetProperty(n => n.IsRead, true));
     }
 
-    public async Task CreateAsync(int userId, string title, string message, NotificationType type)
+    public void Add(int userId, string title, string message, NotificationType type)
     {
-        var notification = new Notification
+        _dbContext.Notifications.Add(new Notification
         {
             UserId = userId,
             Title = title,
@@ -98,21 +94,6 @@ public class NotificationService : INotificationService
             Type = type,
             IsRead = false,
             CreatedAt = DateTime.UtcNow
-        };
-
-        _dbContext.Notifications.Add(notification);
-        await _dbContext.SaveChangesAsync();
-
-        var dto = new NotificationResponse
-        {
-            Id = notification.Id,
-            Title = notification.Title,
-            Message = notification.Message,
-            Type = notification.Type,
-            IsRead = notification.IsRead,
-            CreatedAt = notification.CreatedAt
-        };
-
-        await _hubContext.Clients.Group(NotificationHub.GroupName(userId.ToString())).SendAsync("ReceiveNotification", dto);
+        });
     }
 }

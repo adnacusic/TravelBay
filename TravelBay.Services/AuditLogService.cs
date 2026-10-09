@@ -64,7 +64,7 @@ public class AuditLogService : IAuditLogService
         return new PageResult<AuditLogResponse> { Items = items, TotalCount = totalCount };
     }
 
-    public async Task LogAsync(string entityName, int entityId, string action, int? performedByUserId, string? details = null)
+    public void Log(string entityName, int entityId, string action, int? performedByUserId, string? details = null)
     {
         _dbContext.AuditLogs.Add(new AuditLog
         {
@@ -75,6 +75,5 @@ public class AuditLogService : IAuditLogService
             PerformedAt = DateTime.UtcNow,
             Details = details
         });
-        await _dbContext.SaveChangesAsync();
     }
 }

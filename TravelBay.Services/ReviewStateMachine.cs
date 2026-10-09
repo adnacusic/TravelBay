@@ -39,11 +39,10 @@ public class ReviewStateMachine : IReviewStateMachine
         review.ModeratedByUserId = adminId;
         review.ModeratedAt = DateTime.UtcNow;
         review.ModerationReason = null;
-        await _dbContext.SaveChangesAsync();
-
-        await _auditLogService.LogAsync(nameof(Review), review.Id, "Approved", adminId, null);
-        await _notificationService.CreateAsync(
+        _auditLogService.Log(nameof(Review), review.Id, "Approved", adminId, null);
+        _notificationService.Add(
             review.UserId, "Recenzija odobrena", $"Vaša recenzija destinacije {review.Destination.Name} je odobrena i sada je javno vidljiva.", NotificationType.ReviewApproved);
+        await _dbContext.SaveChangesAsync();
 
         return _mapper.Map<ReviewResponse>(review);
     }
@@ -62,13 +61,30 @@ public class ReviewStateMachine : IReviewStateMachine
         review.ModeratedByUserId = adminId;
         review.ModeratedAt = DateTime.UtcNow;
         review.ModerationReason = reason.Trim();
+        _auditLogService.Log(nameof(Review), review.Id, "Rejected", adminId, review.ModerationReason);
+        _notificationService.Add(
+            review.UserId, "Recenzija odbijena", $"Vaša recenzija destinacije {review.Destination.Name} nije objavljena. Razlog: {review.ModerationReason}", NotificationType.ReviewRejected);
         await _dbContext.SaveChangesAsync();
 
-        await _auditLogService.LogAsync(nameof(Review), review.Id, "Rejected", adminId, review.ModerationReason);
-        await _notificationService.CreateAsync(
-            review.UserId, "Recenzija odbijena", $"Vaša recenzija destinacije {review.Destination.Name} nije objavljena. Razlog: {review.ModerationReason}", NotificationType.ReviewRejected);
-
         return _mapper.Map<ReviewResponse>(review);
+    }
+
+    public void PrepareForEdit(Review review, int authorId)
+    {
+        switch (review.Status)
+        {
+            case ReviewStatus.Pending:
+                return;
+            case ReviewStatus.Approved:
+                review.Status = ReviewStatus.Pending;
+                review.ModeratedByUserId = null;
+                review.ModeratedAt = null;
+                review.ModerationReason = null;
+                _auditLogService.Log(nameof(Review), review.Id, "ResubmittedAfterEdit", authorId, "Approved review edited by its author; back to Pending.");
+                return;
+            default:
+                throw new BusinessException("Odbijena recenzija se ne može mijenjati. Napišite novu recenziju.");
+        }
     }
 
     private async Task<Review> LoadPendingAsync(int reviewId)

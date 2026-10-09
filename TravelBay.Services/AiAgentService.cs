@@ -119,8 +119,16 @@ public class AiAgentService : IAiAgentService
             RequestedAt = DateTime.UtcNow,
             Log = $"[{DateTime.UtcNow:HH:mm:ss}] Poruka poslana workeru (čeka obradu: {waiting})."
         };
-        _dbContext.AiAgentRuns.Add(run);
-        await _dbContext.SaveChangesAsync();
+        // The run row and its audit entry are committed together, and before the message is published,
+        // so the worker always finds the run it is asked to process.
+        await using (var transaction = await _dbContext.Database.BeginTransactionAsync())
+        {
+            _dbContext.AiAgentRuns.Add(run);
+            await _dbContext.SaveChangesAsync();
+            _auditLogService.Log(nameof(AiAgentRun), run.Id, $"Started:{agentType}", adminId, $"{Label(agentType)} queued, {waiting} destinations waiting.");
+            await _dbContext.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
 
         try
         {
@@ -138,7 +146,6 @@ public class AiAgentService : IAiAgentService
             throw new BusinessException("Red poruka (RabbitMQ) trenutno nije dostupan, agent nije pokrenut. Pokušajte ponovo za nekoliko trenutaka.");
         }
 
-        await _auditLogService.LogAsync(nameof(AiAgentRun), run.Id, $"Started:{agentType}", adminId, $"{Label(agentType)} queued, {waiting} destinations waiting.");
         _logger.LogInformation("AI agent run {RunId} ({Command}) published by user {UserId}.", run.Id, command, adminId);
 
         return await GetRunAsync(run.Id);

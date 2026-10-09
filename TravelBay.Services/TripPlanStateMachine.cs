@@ -87,10 +87,9 @@ public class TripPlanStateMachine : ITripPlanStateMachine
 
         entity.Status = to;
         entity.UpdatedAt = DateTime.UtcNow;
+        _auditLogService.Log(nameof(TripPlan), entity.Id, $"StatusChanged:{to}", userId, $"Trip plan '{entity.Name}' moved to {to}.");
+        _notificationService.Add(entity.UserId, "Status plana putovanja promijenjen", $"Plan '{entity.Name}' je sada {Label(to)}.", NotificationType.TripStatusChanged);
         await _dbContext.SaveChangesAsync();
-
-        await _auditLogService.LogAsync(nameof(TripPlan), entity.Id, $"StatusChanged:{to}", userId, $"Trip plan '{entity.Name}' moved to {to}.");
-        await _notificationService.CreateAsync(entity.UserId, "Status plana putovanja promijenjen", $"Plan '{entity.Name}' je sada {Label(to)}.", NotificationType.TripStatusChanged);
 
         return new TripPlanResponse
         {

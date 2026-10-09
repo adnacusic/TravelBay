@@ -34,6 +34,7 @@ class AuthProvider extends ChangeNotifier {
   }
 
   static const _jsonHeaders = {'Content-Type': 'application/json'};
+  static const _logoutTimeout = Duration(seconds: 5);
 
   /// Server messages for login failures, shown in the app language.
   static const _loginMessages = {
@@ -79,7 +80,22 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void logout() {
+  /// Signs out on the server too (refresh tokens deleted, this access token revoked),
+  /// then forgets the session. The local sign-out happens even when the API is unreachable.
+  Future<void> logout() async {
+    final token = _accessToken;
+    if (token != null) {
+      try {
+        await http
+            .post(
+              Uri.parse('${AppConfig.baseUrl}Access/Logout'),
+              headers: {..._jsonHeaders, 'Authorization': 'Bearer $token'},
+            )
+            .timeout(_logoutTimeout);
+      } on Exception catch (e) {
+        debugPrint('Server logout failed, signing out locally: $e');
+      }
+    }
     _clearSession();
     notifyListeners();
   }

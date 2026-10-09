@@ -42,4 +42,12 @@ public class HttpAuthenticatedUserAccessor : IAuthenticatedUserAccessor
         var userRole = user.FindFirstValue(ClaimNames.Role) ?? user.FindFirstValue("role");
         return userRole != null && userRole == role;
     }
+
+    public string? GetTokenId() => _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimNames.TokenId);
+
+    public DateTime? GetTokenExpiresAt()
+    {
+        var exp = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimNames.ExpiresAt);
+        return long.TryParse(exp, out var seconds) ? DateTimeOffset.FromUnixTimeSeconds(seconds).UtcDateTime : null;
+    }
 }

@@ -21,13 +21,32 @@ namespace TravelBay.WebAPI.Services.AccessManager
         private readonly IConfiguration _configuration;
         private readonly ICryptoService _cryptoService;
         private readonly IRefreshTokenService _refreshTokenService;
+        private readonly ITokenRevocationService _tokenRevocationService;
+        private readonly IAuthenticatedUserAccessor _userAccessor;
 
-        public AccessManager(IUserService userService, IConfiguration configuration, ICryptoService cryptoService, IRefreshTokenService refreshTokenService)
+        public AccessManager(
+            IUserService userService,
+            IConfiguration configuration,
+            ICryptoService cryptoService,
+            IRefreshTokenService refreshTokenService,
+            ITokenRevocationService tokenRevocationService,
+            IAuthenticatedUserAccessor userAccessor)
         {
             _userService = userService;
             _configuration = configuration;
             _cryptoService = cryptoService;
             _refreshTokenService = refreshTokenService;
+            _tokenRevocationService = tokenRevocationService;
+            _userAccessor = userAccessor;
+        }
+
+        public async Task LogoutAsync()
+        {
+            var userId = _userAccessor.GetUserId() ?? throw new InvalidOperationException("User id claim is missing.");
+            var jti = _userAccessor.GetTokenId() ?? throw new InvalidOperationException("Token id claim is missing.");
+            var expiresAt = _userAccessor.GetTokenExpiresAt() ?? DateTime.UtcNow;
+
+            await _tokenRevocationService.RevokeAsync(userId, jti, expiresAt);
         }
 
         public async Task<UserLoginResponse> LoginAsync(UserLoginRequest request)
@@ -137,7 +156,8 @@ namespace TravelBay.WebAPI.Services.AccessManager
                     new Claim(ClaimNames.LastName, user.LastName ?? string.Empty),
                     new Claim(ClaimNames.Email, user.Email ?? string.Empty),
                     new Claim(ClaimNames.Role, user.Role ?? "user"),
-                    new Claim(ClaimNames.IsActive, user.IsActive.ToString())
+                    new Claim(ClaimNames.IsActive, user.IsActive.ToString()),
+                    new Claim(ClaimNames.TokenId, Guid.NewGuid().ToString("N"))
                 }),
                 Expires = DateTime.UtcNow.AddMinutes(durationInMinutes),
                 Issuer = issuer,

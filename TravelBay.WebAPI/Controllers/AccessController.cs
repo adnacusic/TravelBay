@@ -3,6 +3,7 @@ using TravelBay.Model.Access;
 using TravelBay.Model.Requests;
 using TravelBay.Services;
 using TravelBay.WebAPI.Services.AccessManager;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace TravelBay.WebAPI.Controllers
@@ -32,6 +33,14 @@ namespace TravelBay.WebAPI.Controllers
         {
             var result = await _accessManager.LoginWithRefreshTokenAsync(request);
             return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPost("Logout")]
+        public async Task<IActionResult> Logout()
+        {
+            await _accessManager.LogoutAsync();
+            return Ok(new { message = "Uspješno ste se odjavili." });
         }
 
         [HttpPost("Register")]

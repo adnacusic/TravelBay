@@ -121,6 +121,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAssetService, AssetService>();
 
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+builder.Services.AddScoped<ITokenRevocationService, TokenRevocationService>();
 
 builder.Services.AddScoped<IAccessManager, AccessManager>();
 
@@ -215,6 +216,17 @@ builder.Services.AddAuthentication(options => // dodavanje authentfikacije i aut
     // JWT as ?access_token=... instead - accept it there, and only there.
     o.Events = new JwtBearerEvents
     {
+        // A token signed out through /Access/Logout stays cryptographically valid until it expires,
+        // so every request also checks the revocation list.
+        OnTokenValidated = async context =>
+        {
+            var jti = context.Principal?.FindFirst(TravelBay.Model.Constants.ClaimNames.TokenId)?.Value;
+            var revocations = context.HttpContext.RequestServices.GetRequiredService<ITokenRevocationService>();
+            if (string.IsNullOrEmpty(jti) || await revocations.IsRevokedAsync(jti))
+            {
+                context.Fail("The access token has been revoked.");
+            }
+        },
         OnMessageReceived = context =>
         {
             var accessToken = context.Request.Query["access_token"];

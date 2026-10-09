@@ -263,7 +263,9 @@ class _SideMenu extends StatelessWidget {
       return;
     }
 
-    context.read<AuthProvider>().logout();
-    openSection(context, const LoginScreen());
+    await context.read<AuthProvider>().logout();
+    if (context.mounted) {
+      openSection(context, const LoginScreen());
+    }
   }
 }

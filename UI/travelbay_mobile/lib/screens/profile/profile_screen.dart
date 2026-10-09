@@ -195,8 +195,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (!confirmed || !mounted) {
       return;
     }
-    context.read<AuthProvider>().logout();
-    openSection(context, const LoginScreen());
+    await context.read<AuthProvider>().logout();
+    if (mounted) {
+      openSection(context, const LoginScreen());
+    }
   }
 
   @override

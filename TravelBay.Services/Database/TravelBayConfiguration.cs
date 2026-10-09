@@ -208,6 +208,17 @@ namespace TravelBay.Services.Database
 
             modelBuilder.Entity<AiAgentRun>()
                 .HasIndex(r => new { r.AgentType, r.Status });
+
+            // ----- RevokedAccessToken -----
+            modelBuilder.Entity<RevokedAccessToken>()
+                .HasOne(t => t.User)
+                .WithMany()
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<RevokedAccessToken>()
+                .HasIndex(t => t.Jti)
+                .IsUnique();
         }
     }
 }

@@ -152,7 +152,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
               title: Text(hasImage ? 'Promijeni sliku' : 'Dodaj sliku'),
-              subtitle: const Text('JPG, PNG, GIF, WEBP ili BMP, najviše 5 MB'),
+              subtitle: const Text('JPG, PNG ili WEBP, najviše 5 MB'),
               onTap: () => Navigator.pop(sheetContext, 'pick'),
             ),
             if (hasImage)

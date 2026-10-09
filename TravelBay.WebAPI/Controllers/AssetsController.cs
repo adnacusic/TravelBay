@@ -8,16 +8,14 @@ using TravelBay.Model.Requests;
 
 namespace TravelBay.WebAPI.Controllers;
 
-[Authorize]
+/// <summary>
+/// Raw asset store, for administration only: users never touch assets directly — profile pictures go
+/// through Users/Me/ProfileImage and destination/news images through their own endpoints.
+/// </summary>
+[Authorize(Roles = RoleNames.Admin)]
 public class AssetsController : BaseCRUDController<AssetResponse, AssetSearch, AssetInsertRequest, AssetUpdateRequest, IAssetService>
 {
     public AssetsController(IAssetService assetService) : base(assetService)
     {
     }
-
-    [Authorize(Roles = RoleNames.Admin)]
-    public override Task<PageResult<AssetResponse>> GetAll([FromQuery] AssetSearch? search) => base.GetAll(search);
-
-    [Authorize(Roles = RoleNames.Admin)]
-    public override Task<IActionResult> Delete(int id) => base.Delete(id);
 }

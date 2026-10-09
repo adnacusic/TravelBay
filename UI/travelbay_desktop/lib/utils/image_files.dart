@@ -27,16 +27,14 @@ class PickedImages {
   final List<String> rejected;
 }
 
-/// Same limits as the API (ImageRules): image types only, at most 5 MB.
+/// Same limits as the API (ImageRules): JPEG, PNG or WebP only, at most 5 MB.
 const int maxImageBytes = 5 * 1024 * 1024;
 
 const _contentTypes = {
   'jpg': 'image/jpeg',
   'jpeg': 'image/jpeg',
   'png': 'image/png',
-  'gif': 'image/gif',
   'webp': 'image/webp',
-  'bmp': 'image/bmp',
 };
 
 Future<PickedImages> pickImageFiles({bool allowMultiple = true}) async {
@@ -53,7 +51,7 @@ Future<PickedImages> pickImageFiles({bool allowMultiple = true}) async {
   for (final file in result.files) {
     final contentType = _contentTypes[file.extension?.toLowerCase() ?? ''];
     if (contentType == null) {
-      rejected.add('${file.name}: format nije podržan (JPG, PNG, GIF, WEBP, BMP).');
+      rejected.add('${file.name}: format nije podržan (JPG, PNG, WEBP).');
       continue;
     }
     if (file.size > maxImageBytes) {

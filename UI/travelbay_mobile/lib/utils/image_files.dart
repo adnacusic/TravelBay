@@ -28,16 +28,14 @@ class ImagePickException implements Exception {
   String toString() => message;
 }
 
-/// Same limits as the API (ImageRules): image types only, at most 5 MB.
+/// Same limits as the API (ImageRules): JPEG, PNG or WebP only, at most 5 MB.
 const int maxImageBytes = 5 * 1024 * 1024;
 
 const _contentTypes = {
   'jpg': 'image/jpeg',
   'jpeg': 'image/jpeg',
   'png': 'image/png',
-  'gif': 'image/gif',
   'webp': 'image/webp',
-  'bmp': 'image/bmp',
 };
 
 /// Null when the user closed the picker without choosing.
@@ -49,7 +47,7 @@ Future<PickedImage?> pickImageFile() async {
 
   final contentType = _contentTypes[file.extension?.toLowerCase() ?? ''];
   if (contentType == null) {
-    throw ImagePickException('Format slike nije podržan. Odaberite JPG, PNG, GIF, WEBP ili BMP.');
+    throw ImagePickException('Format slike nije podržan. Odaberite JPG, PNG ili WEBP.');
   }
   final length = await file.length();
   if (length != null && length > maxImageBytes) {

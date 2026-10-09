@@ -28,10 +28,13 @@ namespace TravelBay.Services.Validators
                     .MaximumLength(ImageRules.MaxFileNameLength).WithMessage($"File name cannot exceed {ImageRules.MaxFileNameLength} characters.");
 
                 RuleFor(x => x.ContentType)
-                    .Must(ImageRules.BeImageContentType).WithMessage("Only image files are allowed.");
+                    .Must(ImageRules.BeAllowedContentType).WithMessage(ImageRules.AllowedTypesMessage);
 
                 RuleFor(x => x.Base64Content!)
-                    .Must(ImageRules.BeValidImageSize).WithMessage($"Image must be valid base64 and at most {ImageRules.MaxImageBytes / (1024 * 1024)} MB.");
+                    .Cascade(CascadeMode.Stop)
+                    .Must(ImageRules.BeValidImageSize).WithMessage(ImageRules.SizeMessage)
+                    .Must((request, base64) => ImageRules.HaveMatchingSignature(base64, request.ContentType))
+                    .WithMessage(ImageRules.SignatureMessage);
             });
         }
     }

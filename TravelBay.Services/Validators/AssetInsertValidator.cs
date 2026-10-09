@@ -11,12 +11,16 @@ namespace TravelBay.Services.Validators
                 .NotEmpty().WithMessage("FileName is required.")
                 .MaximumLength(100).WithMessage("FileName cannot exceed 100 characters.");
 
+            // The asset store only holds images (profile pictures, uploaded destination/news photos).
             RuleFor(x => x.ContentType)
-                .NotEmpty().WithMessage("ContentType is required.")
-                .MaximumLength(100).WithMessage("ContentType cannot exceed 100 characters.");
+                .Must(ImageRules.BeAllowedContentType).WithMessage(ImageRules.AllowedTypesMessage);
 
             RuleFor(x => x.Base64Content)
-                .NotEmpty().WithMessage("Base64Content is required.");
+                .Cascade(CascadeMode.Stop)
+                .NotEmpty().WithMessage("Base64Content is required.")
+                .Must(ImageRules.BeValidImageSize).WithMessage(ImageRules.SizeMessage)
+                .Must((request, base64) => ImageRules.HaveMatchingSignature(base64, request.ContentType))
+                .WithMessage(ImageRules.SignatureMessage);
         }
     }
 }

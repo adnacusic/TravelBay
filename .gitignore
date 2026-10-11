@@ -35,6 +35,7 @@ artifacts/
 *.env
 !.env.example
 *.zip
+!.env-tajne.zip
 
 ## Flutter/Dart build outputs (nested .gitignore files also cover this per-app)
 **/build/
